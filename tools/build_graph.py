@@ -1,5 +1,10 @@
 """Indexer: build a code+literature knowledge graph from a real repo and PDF papers.
 
+Domains:
+  --domain lora   Microsoft LoRA repo + LoRA papers (default, backward compatible)
+  --domain bayes  NumPyro (installed package) + rethinking R package + Bayes books/papers
+                  --repo <site-packages/numpyro> --rrepo <rethinking pkg root> --papers <dir>
+
 Implements README 注意事项7 (real-project extension: AST -> same JSON schema)
 and 步骤8 (incremental indexing by file hash; community summaries precomputed
 at index time by the cloud LLM instead of query time).
@@ -10,9 +15,9 @@ Usage:
         --papers "/path/to/LORA-Tech" \
         --out data/lora_graph.json [--summarize] [--incremental]
 
-Code graph is fully automatic (Python ast). Paper abstracts are extracted
-automatically (pypdf). The variant/concept layer is curated seed knowledge
-(SEED_CONCEPTS / SEED_EDGES below) — swap it when indexing another domain.
+Code graph is fully automatic (Python ast; regex for R). Paper abstracts are
+extracted automatically (pypdf). The concept layer is curated seed knowledge
+(DOMAINS[domain]["seeds"]) — swap it when indexing another domain.
 """
 
 from __future__ import annotations
@@ -25,23 +30,58 @@ import os
 import re
 import sys
 
-# ----------------------------------------------------------------- scope
+# ----------------------------------------------------------------- domain config
 # which repo files to index (relative to --repo); examples/NLU is a vendored
 # transformers fork and would add thousands of noise nodes -> excluded
-CODE_SCOPE_DIRS = ["loralib", os.path.join("examples", "NLG", "src")]
-CODE_SCOPE_FILES = ["setup.py"]
+DOMAINS: dict[str, dict] = {}
+
+DOMAINS["lora"] = {
+    "package": "loralib",
+    "code_scope_dirs": ["loralib", os.path.join("examples", "NLG", "src")],
+    "code_scope_files": ["setup.py"],
+    "paper_files": None,  # all PDFs under --papers
+    "community": lambda rel: "nlg-examples" if rel.startswith("examples") else "loralib-core",
+    "paper_community": lambda name: "lora-theory" if ("intrinsic" in name.lower() or "measuring" in name.lower()) else "lora-variants",
+}
+
+DOMAINS["bayes"] = {
+    # --repo points at the installed numpyro package dir; only these subpackages
+    "package": "numpyro",
+    "code_scope_dirs": ["distributions", "infer"],
+    "code_scope_files": [],
+    "r_scope": ["R"],  # rethinking package source (regex-parsed)
+    # curated MVP reading set from Bayes_Reading_List (3-5 core texts)
+    "paper_files": [
+        "Statistical Rethinking A Bayesian Course with Examples in R and STAN",
+        "Andrew Gelman-Bayesian Data Analysis 3rd Edition.pdf",
+        "Think Bayes_ Bayesian Statistics in Python-O'Reilly Media (2021).pdf",
+        "Bayesian Statistics The Fun Way(2019).pdf",
+        "5-How to become a Bayesian in eight easy steps- An annotated reading list.pdf",
+        "A Short Introduction to Bayesian Neural Networks • David Stutz.pdf",
+    ],
+    "community": lambda rel: "numpyro-infer" if rel.startswith("infer") else "numpyro-distributions",
+    "paper_community": lambda name: "bayes-theory",
+}
+
+
+def current_domain() -> dict:
+    return DOMAINS[_domain_name[0]]
+
+
+_domain_name = ["lora"]
 
 
 def collect_code_files(repo: str) -> list[str]:
+    cfg = current_domain()
     files = []
-    for d in CODE_SCOPE_DIRS:
+    for d in cfg["code_scope_dirs"]:
         root = os.path.join(repo, d)
         if not os.path.isdir(root):
             continue
         for name in sorted(os.listdir(root)):
-            if name.endswith(".py"):
+            if name.endswith(".py") and "__pycache__" not in name:
                 files.append(os.path.relpath(os.path.join(root, name), repo))
-    for f in CODE_SCOPE_FILES:
+    for f in cfg["code_scope_files"]:
         if os.path.isfile(os.path.join(repo, f)):
             files.append(f)
     return files
@@ -69,7 +109,7 @@ def signature(fn: ast.FunctionDef) -> str:
 
 
 def community_for(rel_path: str) -> str:
-    return "nlg-examples" if rel_path.startswith("examples") else "loralib-core"
+    return current_domain()["community"](rel_path)
 
 
 def parse_code_file(repo: str, rel_path: str) -> tuple[list[dict], list[dict], list[tuple[str, str]]]:
@@ -107,8 +147,9 @@ def parse_code_file(repo: str, rel_path: str) -> tuple[list[dict], list[dict], l
                     imports.append((a.name, False))
             else:
                 mod = item.module or ""
+                pkg = current_domain()["package"]
                 if item.level:  # relative import inside the package
-                    mod = "loralib." + mod if mod else "loralib"
+                    mod = f"{pkg}." + mod if mod else pkg
                 imports.append((mod, True))
                 for a in item.names:
                     imports.append((f"{mod}.{a.name}", True))
@@ -187,6 +228,105 @@ def resolve_code(repo: str, files: list[str]) -> tuple[list[dict], list[dict]]:
     return all_nodes, edges
 
 
+# ----------------------------------------------------------------- R sources (rethinking)
+R_FUNC_RE = re.compile(r'^([A-Za-z._][\w.]*|`[^`]+`)\s*(?:<-|=)\s*function\s*\(', re.M)
+R_SETCLASS_RE = re.compile(r'setClass\(\s*["\'](\w+)["\']')
+R_SETMETHOD_RE = re.compile(r'set(?:Generic|Method)\(\s*["\']([\w.]+)["\']')
+R_ASSIGN_RE = re.compile(r'^([A-Za-z._][\w.]*)\s*(?:<-|=)\s*(?!function)', re.M)
+
+
+def collect_r_files(rrepo: str) -> list[str]:
+    root = os.path.join(rrepo, "R")
+    out = []
+    if not os.path.isdir(root):
+        return out
+    for name in sorted(os.listdir(root)):
+        if name.lower().endswith(".r") and not name.startswith("."):
+            out.append(os.path.relpath(os.path.join(root, name), rrepo))
+    return out
+
+
+def parse_r_file(rrepo: str, rel_path: str) -> tuple[list[dict], list[dict]]:
+    """Regex-level parse: top-level `name <- function(...)` -> Function node,
+    setClass("Name") -> Class node, name <- non-function -> Variable node.
+    Call edges resolved later against known rfunc names (same trick as @name:)."""
+    path = os.path.join(rrepo, rel_path)
+    src = open(path, encoding="utf-8", errors="replace").read()
+    community = "rethinking-r"
+    file_id = f"rfile:{rel_path}"
+    nodes = [{"id": file_id, "type": "File", "name": rel_path, "community": community,
+              "properties": {"path": rel_path, "description": f"R source, {len(src.splitlines())} lines", "lang": "R"}}]
+    edges: list[dict] = []
+    defined: list[str] = []
+
+    def add(node_dict):
+        nodes.append(node_dict)
+        edges.append({"source": file_id, "target": node_dict["id"], "relation": "defines"})
+
+    # function spans: from match start to the matching close of the body (approx: next top-level def)
+    func_matches = list(R_FUNC_RE.finditer(src))
+    for i, m in enumerate(func_matches):
+        name = m.group(1).strip("`")
+        if name in defined:
+            continue
+        defined.append(name)
+        span_end = func_matches[i + 1].start() if i + 1 < len(func_matches) else len(src)
+        span = src[m.start():span_end]
+        # signature = text between 'function(' and its first closing paren on the def line region
+        sig_m = re.search(r'function\s*\(((?:[^()]|\([^()]*\))*)\)', src[m.end() - 1:m.end() + 1500])
+        sig = "(" + re.sub(r"\s+", " ", sig_m.group(1)).strip() + ")" if sig_m else "()"
+        # preceding comment block as description
+        pre = src[:m.start()].rstrip().splitlines()[-3:]
+        desc = " ".join(l.lstrip("#' ").strip() for l in pre if l.strip().startswith("#"))[:160] or f"R function {name}"
+        fid = f"rfunc:{name}"
+        add({"id": fid, "type": "Function", "name": name, "community": community,
+             "properties": {"signature": sig, "description": desc, "lang": "R", "calls": sorted(set(re.findall(r'([A-Za-z._][\w.]*)\s*\(', span)))}})
+    for m in R_SETMETHOD_RE.finditer(src):
+        name = m.group(1)
+        if name in defined:
+            continue
+        defined.append(name)
+        fid = f"rfunc:{name}"
+        if not any(n["id"] == fid for n in nodes):
+            add({"id": fid, "type": "Function", "name": name, "community": community,
+                 "properties": {"signature": "()", "description": f"R S4 generic/method {name}", "lang": "R", "calls": []}})
+    for m in R_SETCLASS_RE.finditer(src):
+        name = m.group(1)
+        cid = f"class:{name}"
+        if not any(n["id"] == cid for n in nodes):
+            add({"id": cid, "type": "Class", "name": name, "community": community,
+                 "properties": {"description": f"R S4 class {name}", "lang": "R"}})
+    for m in R_ASSIGN_RE.finditer(src):
+        name = m.group(1)
+        if name in defined or name.startswith("."):
+            continue
+        vid = f"rvar:{name}"
+        if not any(n["id"] == vid for n in nodes):
+            add({"id": vid, "type": "Variable", "name": name, "community": community,
+                 "properties": {"description": f"R top-level value {name}", "lang": "R"}})
+    return nodes, edges
+
+
+def resolve_r(rrepo: str) -> tuple[list[dict], list[dict]]:
+    files = collect_r_files(rrepo)
+    all_nodes, raw_edges = [], []
+    for rel in files:
+        nodes, edges = parse_r_file(rrepo, rel)
+        all_nodes.extend(nodes)
+        raw_edges.extend(edges)
+    rfunc_by_name = {n["name"]: n["id"] for n in all_nodes if n["type"] == "Function" and n["id"].startswith("rfunc:")}
+    class_by_name = {n["name"]: n["id"] for n in all_nodes if n["type"] == "Class"}
+    edges = []
+    for n in all_nodes:
+        if n["type"] == "Function" and n["id"].startswith("rfunc:"):
+            for callee in n["properties"].pop("calls", []):
+                tgt = rfunc_by_name.get(callee) or class_by_name.get(callee)
+                if tgt and tgt != n["id"]:
+                    edges.append({"source": n["id"], "target": tgt, "relation": "calls"})
+    edges.extend(raw_edges)
+    return all_nodes, edges
+
+
 # ----------------------------------------------------------------- papers
 def extract_abstract(pdf_path: str, max_chars: int = 520) -> str:
     try:
@@ -251,6 +391,9 @@ def paper_concept(filename: str) -> str | None:
     """Explicit filename -> concept mapping (most specific first; substring "lora"
     must not match before variant names like adalora/qlora)."""
     f = filename.lower().replace("-", "").replace(" ", "")
+    fn = DOMAINS[_domain_name[0]].get("paper_concept")
+    if fn:
+        return fn(f)
     if "adalora" in f:
         return "concept:AdaLoRA"
     if "bayesian" in f:
@@ -266,20 +409,98 @@ def paper_concept(filename: str) -> str | None:
     return None
 
 
-def parse_papers(papers_dir: str) -> tuple[list[dict], list[dict]]:
+# ---- Bayes domain seed layer (NumPyro + rethinking + Statistical Rethinking MVP)
+BAYES_SEED_CONCEPTS = [
+    {"id": "concept:ConjugatePrior", "name": "Conjugate-Prior", "community": "bayes-theory", "properties": {
+        "description": "先验与似然同族使后验闭式可解: Beta-Binomial, Gamma-Poisson, Dirichlet-Multinomial; numpyro.distributions.conjugate 内置复合分布, 无需 MCMC 即可精确后验"}},
+    {"id": "concept:Reparameterization", "name": "Reparameterization-Trick", "community": "bayes-theory", "properties": {
+        "description": "z = mu + sigma*eps (eps~N(0,1)) 把随机节点变确定函数, 使 ELBO 梯度可低方差反传; numpyro Distribution.rsample 即此接口, TransformedDistribution 链式支持"}},
+    {"id": "concept:HMC", "name": "HMC", "community": "bayes-theory", "properties": {
+        "description": "引入动量 p, 用 Hamilton 动力学沿等势面 Leapfrog 积分提案, 抑制随机游走; 需手调 stepsize/L; numpyro.infer.HMC"}},
+    {"id": "concept:NUTS", "name": "NUTS", "community": "bayes-theory", "properties": {
+        "description": "HMC 自适应版: 二叉树倍增轨迹 + 双平均自适应 stepsize + 无转向终止判据, Stan/rethinking ulam() 的默认采样器; numpyro.infer.NUTS"}},
+    {"id": "concept:MCMC", "name": "MCMC", "community": "bayes-theory", "properties": {
+        "description": "马尔可夫链蒙特卡洛后验采样框架 (Gibbs/HMC/NUTS/ensemble); numpyro.infer.MCMC 驱动 kernel, 提供 warmup/多链/收敛诊断接口"}},
+    {"id": "concept:VariationalInference", "name": "Variational-Inference", "community": "bayes-theory", "properties": {
+        "description": "以参数族 q(z;phi) 最小化 KL(q||p)=ELBO 近似后验, 把推断变优化; ADVI/自动导引 (AutoNormal/MVN); rethinking quap() 为 MAP+高斯拉普拉斯近似的 VI 实现"}},
+    {"id": "concept:HierarchicalModel", "name": "Hierarchical-Model", "community": "bayes-theory", "properties": {
+        "description": "多层/部分池化模型: 组级参数共享超先验, 小样本组自动收缩 (pooling); Statistical Rethinking 核心主题, ulam()/numpyro plate 表达, 非中心参数化改善 NUTS 几何"}},
+    {"id": "concept:PosteriorPredictive", "name": "Posterior-Predictive-Check", "community": "bayes-theory", "properties": {
+        "description": "从后验抽参数再模拟 replicate 数据与观测对比, 检验模型失配; rethinking link()/sim() 与 numpyro Predictive(posterior_samples) 对应实现"}},
+    {"id": "concept:ModelComparison", "name": "Model-Comparison", "community": "bayes-theory", "properties": {
+        "description": "WAIC/LOO 基于逐观测点 log 似然 (pointwise) 的渐近信息准则比较预测性能, 含惩罚项与 SE; rethinking compare()/WAIC()/LOO(); numpyro 需自行计算 point_log_prob"}},
+]
+
+BAYES_SEED_EDGES = [
+    ("concept:ConjugatePrior", "implemented_by", "class:BetaBinomial"),
+    ("concept:ConjugatePrior", "implemented_by", "class:GammaPoisson"),
+    ("concept:ConjugatePrior", "implemented_by", "class:DirichletMultinomial"),
+    ("concept:ConjugatePrior", "corresponds_to", "class:Beta"),
+    ("concept:ConjugatePrior", "corresponds_to", "class:Gamma"),
+    ("concept:Reparameterization", "modifies", "method:Distribution.rsample"),
+    ("concept:Reparameterization", "applies_to", "class:TransformedDistribution"),
+    ("concept:Reparameterization", "motivates", "concept:VariationalInference"),
+    ("concept:NUTS", "extends", "concept:HMC"),
+    ("concept:NUTS", "implemented_by", "class:NUTS"),
+    ("concept:NUTS", "corresponds_to", "rfunc:ulam"),
+    ("concept:HMC", "implemented_by", "class:HMC"),
+    ("concept:MCMC", "implemented_by", "class:MCMC"),
+    ("concept:MCMC", "implemented_by", "class:Gibbs"),
+    ("concept:MCMC", "covers", "concept:NUTS"),
+    ("concept:MCMC", "covers", "concept:HMC"),
+    ("concept:VariationalInference", "implemented_by", "class:SVI"),
+    ("concept:VariationalInference", "implemented_by", "class:AutoNormal"),
+    ("concept:VariationalInference", "implemented_by", "class:ELBO"),
+    ("concept:VariationalInference", "corresponds_to", "rfunc:quap"),
+    ("concept:HierarchicalModel", "applies_to", "rfunc:ulam"),
+    ("concept:HierarchicalModel", "applies_to", "class:Independent"),
+    ("concept:HierarchicalModel", "applies_to", "class:Normal"),
+    ("concept:PosteriorPredictive", "implemented_by", "rfunc:link"),
+    ("concept:PosteriorPredictive", "implemented_by", "rfunc:sim"),
+    ("concept:PosteriorPredictive", "implemented_by", "class:Predictive"),
+    ("concept:ModelComparison", "implemented_by", "rfunc:compare"),
+    ("concept:ModelComparison", "implemented_by", "rfunc:WAIC"),
+    ("concept:ModelComparison", "implemented_by", "rfunc:LOO"),
+    ("concept:ModelComparison", "proposed_in", "paper:AndrewGelman"),
+]
+
+DOMAINS["bayes"]["seeds"] = (BAYES_SEED_CONCEPTS, BAYES_SEED_EDGES)
+DOMAINS["bayes"]["paper_concept"] = lambda f: (
+    "concept:HierarchicalModel" if "rethinking" in f else
+    "concept:ModelComparison" if "gelman" in f or "bayesiandataanalysis" in f else
+    "concept:ConjugatePrior" if "thinkbayes" in f else
+    "concept:MCMC" if "funway" in f else
+    "concept:VariationalInference" if "bayesianneuralnetworks" in f or "stutz" in f else None)
+
+
+def parse_papers(papers_dirs: list[str]) -> tuple[list[dict], list[dict]]:
+    cfg = current_domain()
+    wanted = cfg.get("paper_files")
     nodes, edges = [], []
-    for name in sorted(os.listdir(papers_dir)):
-        if not name.lower().endswith(".pdf"):
-            continue
-        path = os.path.join(papers_dir, name)
-        pid = f"paper:{slug(name)}"
-        title = name[:-4].replace("-", " ").replace(".pdf", "")
-        abstract = extract_abstract(path)
-        theory = "intrinsic" in name.lower() or "measuring" in name.lower()
-        cid = paper_concept(name)
-        nodes.append({"id": pid, "type": "Paper", "name": title[:70], "community": "lora-theory" if theory else "lora-variants",
-                      "properties": {"description": abstract or title, "file": name, "abstract": abstract,
-                                     "concept": cid or ""}})
+    seen_pids = set()
+    for papers_dir in papers_dirs:
+        names = wanted if wanted else sorted(os.listdir(papers_dir))
+        for name in names:
+            path = os.path.join(papers_dir, name)
+            if not os.path.isfile(path):
+                continue
+            if os.path.splitext(name)[1] and not name.lower().endswith(".pdf"):
+                continue
+            pid = f"paper:{slug(name)}"
+            if pid in seen_pids:
+                continue
+            seen_pids.add(pid)
+            title = (name[:-4] if name.lower().endswith(".pdf") else name).replace("-", " ").replace(".pdf", "")
+            abstract = extract_abstract(path)
+            cid = paper_concept(name)
+            nodes.append({"id": pid, "type": "Paper", "name": title[:70], "community": cfg["paper_community"](name),
+                          "properties": {"description": abstract or title, "file": name, "abstract": abstract,
+                                         "concept": cid or ""}})
+    if wanted:
+        found = {n for n in sum((sorted(os.listdir(d)) for d in papers_dirs), [])}
+        for name in wanted:
+            if name not in found:
+                print(f"  [warn] paper missing, skipped: {name}", file=sys.stderr)
     return nodes, edges
 
 
@@ -329,12 +550,15 @@ def load_cache(out_path: str) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--domain", default="lora", choices=sorted(DOMAINS))
     ap.add_argument("--repo", required=True, help="root of the code repository")
-    ap.add_argument("--papers", default="", help="directory containing PDF papers")
+    ap.add_argument("--rrepo", default="", help="root of an R package source (regex-parsed, bayes domain)")
+    ap.add_argument("--papers", default=None, action="append", help="directory containing PDF papers (repeatable)")
     ap.add_argument("--out", default="data/lora_graph.json")
     ap.add_argument("--summarize", action="store_true", help="precompute community summaries (cloud LLM)")
     ap.add_argument("--incremental", action="store_true", help="reuse cached parse results for unchanged files")
     args = ap.parse_args()
+    _domain_name[0] = args.domain
 
     repo = os.path.abspath(args.repo)
     cache = load_cache(args.out) if args.incremental else {}
@@ -358,24 +582,37 @@ def main() -> None:
         print(f"re-parsed {len(changed_files)} changed files: {changed_files[:6]}{'...' if len(changed_files) > 6 else ''}")
     else:
         for n in cached_nodes.values():
-            if n["type"] != "Paper":
+            if n["type"] != "Paper" and not n["id"].startswith(("rfile:", "rfunc:", "rvar:")):
                 nodes.append(n)
-        edges.extend([e for e in cached_edges if not e["source"].startswith(("paper:", "concept:"))])
+        edges.extend([e for e in cached_edges if not e["source"].startswith(("paper:", "concept:", "rfile:", "rfunc:"))])
         print("code unchanged: reused cached nodes/edges")
 
-    if args.papers:
-        papers_dir = os.path.abspath(args.papers)
+    if args.rrepo:
+        r_nodes, r_edges = resolve_r(os.path.abspath(args.rrepo))
+        nodes.extend(r_nodes)
+        edges.extend(r_edges)
+        print(f"R sources: {len(r_nodes)} nodes, {len(r_edges)} edges")
+
+    papers_dirs = [os.path.abspath(p) for p in (args.papers or []) if p]
+    if papers_dirs:
         p_nodes, p_edges = [], []
         pdf_changed = False
-        for name in sorted(os.listdir(papers_dir)):
-            if name.lower().endswith(".pdf"):
-                h = sha256(os.path.join(papers_dir, name))
-                new_hashes[f"paper:{name}"] = h
-                if h != cached_hashes.get(f"paper:{name}"):
-                    pdf_changed = True
+        wanted = current_domain().get("paper_files")
+        names = []
+        for d in papers_dirs:
+            names += [n for n in (wanted if wanted else sorted(os.listdir(d))) if os.path.isfile(os.path.join(d, n))]
+        for name in names:
+            for d in papers_dirs:
+                path = os.path.join(d, name)
+                if os.path.isfile(path):
+                    h = sha256(path)
+                    new_hashes[f"paper:{name}"] = h
+                    if h != cached_hashes.get(f"paper:{name}"):
+                        pdf_changed = True
+                    break
         # first run has no paper hashes -> pdf_changed is True anyway
         if pdf_changed:
-            p_nodes, p_edges = parse_papers(papers_dir)
+            p_nodes, p_edges = parse_papers(papers_dirs)
             print(f"papers re-extracted: {len(p_nodes)}")
         else:
             p_nodes = [n for n in cached_nodes.values() if n["type"] == "Paper"]
@@ -385,13 +622,14 @@ def main() -> None:
         edges.extend(p_edges)
 
     # curated concept layer (always rebuilt, cheap)
-    for c in SEED_CONCEPTS:
+    seed_concepts, seed_edges = current_domain().get("seeds", (SEED_CONCEPTS, SEED_EDGES))
+    for c in seed_concepts:
         c.setdefault("type", "Concept")
-    existing_ids = {n["id"] for n in nodes} | {c["id"] for c in SEED_CONCEPTS}
-    for c in SEED_CONCEPTS:
+    existing_ids = {n["id"] for n in nodes} | {c["id"] for c in seed_concepts}
+    for c in seed_concepts:
         if c["id"] not in {n["id"] for n in nodes}:
             nodes.append(c)
-    for src, rel, tgt in SEED_EDGES:
+    for src, rel, tgt in seed_edges:
         if src in existing_ids and tgt in existing_ids:
             edges.append({"source": src, "target": tgt, "relation": rel})
 

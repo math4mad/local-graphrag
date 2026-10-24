@@ -15,3 +15,6 @@ __pycache__/
 .env
 .DS_Store
 .vscode/
+
+# 受版权保护的文献 PDF 不入仓（用户自备, 见 README 贝叶斯域一节）
+data/bayes_papers/
