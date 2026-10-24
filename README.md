@@ -30,11 +30,14 @@ graphrag_engine/
 ├── graph_store.py    # 图数据加载、Schema 推导、关键词回退检索、子图序列化
 ├── query_dsl.py      # 结构化查询 DSL 定义 + 确定性执行器
 ├── local_model.py    # Ollama 小模型客户端（Schema + few-shot 约束 JSON 输出）
-├── cloud_llm.py      # OpenAI 兼容云端客户端 + 离线模板回退
+├── cloud_llm.py      # OpenAI 兼容云端客户端（answer/code 双模式）+ 离线模板回退
 ├── engine.py         # 流水线编排与回退策略
 └── cli.py            # 交互式 REPL（逐阶段透明展示）
 data/code_graph.json  # 示例：shop-service 代码知识图谱（30 节点 / 57 边 / 5 社区）
-examples/demo.py      # 端到端演示脚本
+data/lora_graph.json  # 真实图谱：Microsoft LoRA 仓库 + 8 篇 LoRA 文献（179 节点 / 241 边）
+tools/build_graph.py  # 索引器：AST 解析代码 + pypdf 提取文献摘要 + 增量索引 + 索引期社区摘要
+examples/demo.py      # 端到端演示脚本（demo 图谱）
+examples/lora_variants.py  # 真实场景演示：基于文献生成 LoRA 变体的可执行代码
 ```
 
 ## 结构化查询 DSL
@@ -111,6 +114,34 @@ REPL 输出示例（每个阶段可独立审计）：
 
 云端答案能正确重建跨模块调用链、标注模块边界，并**主动声明子图未覆盖的信息缺口**（提示词强约束，见 `cloud_llm.py` SYSTEM）。
 
+## 真实仓库扩展（已落地）
+
+`tools/build_graph.py` 把本引擎接到了**真实代码库 + 真实文献**上——Microsoft [LoRA](https://github.com/microsoft/LoRA) 官方仓库（`loralib/` + NLG 示例，17 个 Python 文件经 `ast` 自动解析）与 8 篇 LoRA 论文（pypdf 自动提取摘要），产出 `data/lora_graph.json`：
+
+```bash
+pip install pypdf
+python3 tools/build_graph.py \
+    --repo /path/to/LoRA \
+    --papers "/path/to/LORA-Tech" \
+    --out data/lora_graph.json \
+    --summarize --incremental
+```
+
+- **全自动部分**：代码图谱（File/Class/Method/Function + defines/inherits/calls/imports 边）、论文摘要抽取、社区划分与摘要（`--summarize` 在**索引阶段**调用云端 LLM 预计算，查询期零开销）
+- **增量索引**（`--incremental`）：按文件 sha256 判断变更，未变文件复用缓存节点/边；已验证增量输出与全量完全一致
+- **策展层**：变体概念节点（LoRA/QLoRA/AdaLoRA/Bayesian-LoRA/HiLoRA/Intrinsic-Dimension）与 `extends`/`modifies`/`implemented_by` 边是脚本内显式种子（`SEED_CONCEPTS`/`SEED_EDGES`），换领域时替换即可
+
+### 基于文献生成 LoRA 变体的可执行代码
+
+`cloud_llm.py` 新增 `task="code"` 模式：云端提示词要求「与子图中的真实 API 签名兼容、文献要点必须落实到代码、未覆盖细节显式标注假设」：
+
+```bash
+GRAPH_PATH=data/lora_graph.json python3 examples/lora_variants.py        # 4 个变体实现问题
+GRAPH_PATH=data/lora_graph.json python3 -m graphrag_engine code          # REPL 代码生成模式
+```
+
+已验证（qwen2.5-coder:7b + deepseek-chat）：QLoRA（NF4 双重量化 + bf16 LoRA 旁路）、AdaLoRA（SVD 重参数化 + spectral-movement 预算分配）、Bayesian-LoRA（低秩因子变分后验）、HiLoRA（分层联邦聚合，正确按 `ΔW=B@A` 增量加权合并再 SVD 截断回低秩）——四份输出均为继承 loralib 真实签名、含假设标注的完整可运行代码。
+
 ## 注意事项
 
 1. **`OLLAMA_MODELS` 环境变量陷阱**：若曾把它指向自定义目录（如 MLX 模型目录），`ollama list` 会显示空、重启服务后"丢模型"。留空即使用默认 `~/.ollama/models`。
@@ -119,8 +150,8 @@ REPL 输出示例（每个阶段可独立审计）：
 4. **社区摘要必须与图边一致**：摘要声称的依赖关系（如"各服务依赖 TransactionManager"）若图中没有对应边，检索会落空。本示例已补 `depends` 边对齐。
 5. **换模型只改环境变量**：`LOCAL_MODEL=qwen2.5-coder:1.5b python3 -m graphrag_engine`，无需改代码。7b 查询准确率显著高于 1.5b。
 6. **成本**：发往云端的是裁剪后的子图文本（通常 < 1K token），一次问答成本极低。
-7. **扩展为真实项目**：把 `data/code_graph.json` 换成你的代码解析产物（tree-sitter / Jedi / semgrep 均可生成同构 JSON），Schema 与 few-shot 自动从图中推导，无需改引擎。
-8. **生产化建议**（本 demo 未实现）：增量索引（监听 git 变更只更新受影响子图）、向量检索作为二级回退、社区摘要在索引阶段预生成。
+7. **接入其他真实仓库**：运行 `tools/build_graph.py`（AST 解析 + pypdf 摘要，见上节）生成同构 JSON，`GRAPH_PATH` 指向新图谱即可；概念种子层 `SEED_CONCEPTS`/`SEED_EDGES` 需按领域替换。
+8. **生产化建议**（本 demo 未实现）：监听 git 事件的自动增量索引（当前为手动 `--incremental`）、向量检索作为二级回退。索引期社区摘要与增量索引已在 `tools/build_graph.py` 落地。
 
 ## License
 

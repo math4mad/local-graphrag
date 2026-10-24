@@ -25,9 +25,11 @@ def print_result(r) -> None:
 
 
 def main() -> None:
+    # --task code: ground code generation (e.g. LoRA variants) in the retrieved subgraph
+    task = "code" if "code" in sys.argv[1:] else "answer"
     engine = GraphQueryEngine()
     print(f"Local GraphRAG engine | graph: {engine.store.meta.get('project', '?')} "
-          f"({len(engine.store.nodes)} nodes, {len(engine.store.edges)} edges)")
+          f"({len(engine.store.nodes)} nodes, {len(engine.store.edges)} edges) | task: {task}")
     print(f"local model: {engine.local.model} @ {engine.local.base_url} | "
           f"cloud: {engine.cloud.model} ({'key set' if engine.cloud.available else 'offline template'})")
     print("Type a question (or 'quit').\n")
@@ -41,7 +43,7 @@ def main() -> None:
             continue
         if question.lower() in ("quit", "exit", "q"):
             break
-        print_result(engine.ask(question))
+        print_result(engine.ask(question, task=task))
 
 
 if __name__ == "__main__":

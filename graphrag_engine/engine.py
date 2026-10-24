@@ -11,6 +11,8 @@ from .local_model import LocalSmallModel
 from .query_dsl import QueryResult, execute, keyword_query, to_context_text
 
 DEFAULT_GRAPH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "code_graph.json")
+# GRAPH_PATH env overrides the demo graph (e.g. data/lora_graph.json built by tools/build_graph.py)
+DEFAULT_GRAPH = os.getenv("GRAPH_PATH", DEFAULT_GRAPH)
 
 
 @dataclass
@@ -52,7 +54,7 @@ class GraphQueryEngine:
             model=cloud_model or os.getenv("CLOUD_LLM_MODEL", default_model),
         )
 
-    def ask(self, question: str) -> EngineResult:
+    def ask(self, question: str, task: str = "answer") -> EngineResult:
         out = EngineResult(question=question)
 
         # 1) local small model: question -> structured query
@@ -64,7 +66,7 @@ class GraphQueryEngine:
 
         # 3) fallback: keyword search when the query errored, matched nothing,
         #    or returned an isolated node (bad direction/relation choice by the small model)
-        degraded = result.error or result.is_empty or (len(result.nodes) <= 1 and not result.edges)
+        degraded = result.error or result.is_empty or (len(result.nodes) <= 3 and len(result.edges) <= 3)
         if degraded:
             fallback_query = keyword_query(self.store, question)
             fb_result = execute(self.store, fallback_query)
@@ -75,5 +77,5 @@ class GraphQueryEngine:
 
         # 4) cloud LLM: subgraph context + question -> final answer
         out.context_text = to_context_text(self.store, result)
-        out.answer, out.answer_source = self.cloud.synthesize(question, self.store, result, out.context_text)
+        out.answer, out.answer_source = self.cloud.synthesize(question, self.store, result, out.context_text, task=task)
         return out

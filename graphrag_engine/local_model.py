@@ -67,6 +67,8 @@ class LocalSmallModel:
             "for 'what does X depend on / call / use / affect' (X as subject) use direction 'out'; "
             "when unsure which relation exists, prefer \"relation\": \"*\"; "
             "for 'how does X work / 实现流程' questions use 'out'; "
+            "for 'implement X / 实现X变体 / 给出可执行代码' questions anchor the concept/class "
+            "and use \"relation\": [\"*\"], \"direction\": \"both\", hops 2 so modified code entities are included; "
             "set include_community_summaries=true for architecture/overview questions."
         )
 

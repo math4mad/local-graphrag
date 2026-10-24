@@ -17,6 +17,15 @@ SYSTEM = (
     "若子图信息不足以回答, 明确说明缺口, 不要编造。"
 )
 
+SYSTEM_CODE = (
+    "你是本地 GraphRAG 引擎的代码生成层, 依据给定的代码知识图谱子图(真实类/函数签名与文献要点摘要) "
+    "输出高质量、可直接运行的 PyTorch 代码, 实现用户要求的 LoRA 变体。要求: "
+    "1) 与子图中展示的现有 API(类名/参数/方法)保持兼容, 优先继承或复用; "
+    "2) 文献要点(量化/重参数化/预算分配等)必须落实到代码; "
+    "3) 完整可执行: 含 import 与必要注释, 不省略函数体; "
+    "4) 子图未覆盖的细节, 在代码注释中标注假设, 不编造不存在的 API。用中文解释 + 一个 python 代码块。"
+)
+
 
 class CloudLLM:
     def __init__(self, base_url: str = "https://api.openai.com/v1", api_key: str = "", model: str = "gpt-4o-mini", timeout: int = 120):
@@ -29,20 +38,20 @@ class CloudLLM:
     def available(self) -> bool:
         return bool(self.api_key)
 
-    def synthesize(self, question: str, store: GraphStore, result: QueryResult, context_text: str) -> tuple[str, str]:
-        """Return (answer, source) where source is 'cloud' or 'template'."""
+    def synthesize(self, question: str, store: GraphStore, result: QueryResult, context_text: str, task: str = "answer") -> tuple[str, str]:
+        """Return (answer, source) where source is 'cloud' or 'template'. task: 'answer' | 'code'."""
         if self.available:
-            answer = self._chat(question, context_text)
+            answer = self._chat(question, context_text, task=task)
             if answer is not None:
                 return answer, "cloud"
-        return self._template(question, result), "template"
+        return self._template(question, result, task=task), "template"
 
-    def _chat(self, question: str, context_text: str) -> str | None:
+    def _chat(self, question: str, context_text: str, task: str = "answer") -> str | None:
         payload = {
             "model": self.model,
             "temperature": 0.2,
             "messages": [
-                {"role": "system", "content": SYSTEM},
+                {"role": "system", "content": SYSTEM_CODE if task == "code" else SYSTEM},
                 {"role": "user", "content": f"问题: {question}\n\n{context_text}"},
             ],
         }
@@ -59,9 +68,10 @@ class CloudLLM:
             return None
 
     @staticmethod
-    def _template(question: str, result: QueryResult) -> str:
+    def _template(question: str, result: QueryResult, task: str = "answer") -> str:
         """Offline fallback: render the retrieved subgraph as a readable answer."""
-        lines = [f"针对问题「{question}」, 本地图谱检索结果如下 (离线模板渲染, 未调用云端 LLM):"]
+        hint = " (代码生成需要云端 LLM, 此处仅展示检索到的子图)" if task == "code" else ""
+        lines = [f"针对问题「{question}」, 本地图谱检索结果如下 (离线模板渲染, 未调用云端 LLM){hint}:"]
         if result.matched:
             names = ", ".join(n.name for n in result.matched)
             lines.append(f"- 命中实体: {names}")

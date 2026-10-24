@@ -1,0 +1,3214 @@
+{
+ "meta": {
+  "project": "LoRA",
+  "built_from": "ast+pypdf indexer (tools/build_graph.py)",
+  "file_hashes": {
+   "code:loralib/__init__.py": "df9ca7e519d0bbe0",
+   "code:loralib/layers.py": "ea9fa6bd0930dfbf",
+   "code:loralib/utils.py": "9cd157527f79d48c",
+   "code:examples/NLG/src/data_utils.py": "36426399c21c0a3d",
+   "code:examples/NLG/src/encoder.py": "e3586d52ff0e9e3a",
+   "code:examples/NLG/src/exp_utils.py": "7ba2aab6ada5deab",
+   "code:examples/NLG/src/format_converting_dart.py": "1a49e1df5f6cefb7",
+   "code:examples/NLG/src/format_converting_e2e.py": "b7f86266735cebb1",
+   "code:examples/NLG/src/format_converting_webnlg.py": "1e75f7031f677ab0",
+   "code:examples/NLG/src/gpt2_beam.py": "8ecf65d444bcdc72",
+   "code:examples/NLG/src/gpt2_decode.py": "57cfc9aacdb053af",
+   "code:examples/NLG/src/gpt2_encode.py": "12b7f303e1a4008d",
+   "code:examples/NLG/src/gpt2_ft.py": "9c54e681acb3275f",
+   "code:examples/NLG/src/gpu.py": "1dbaadc4feec084d",
+   "code:examples/NLG/src/model.py": "bfbf7bdaf69a8ecc",
+   "code:examples/NLG/src/optimizer.py": "d3a9be7044090992",
+   "code:setup.py": "f864ba3056db3c0d",
+   "paper:ADALORA-ADAPTIVE BUDGET ALLOCATION FOR PARAMETER-EFFICIENT FINE-TUNING.pdf": "7afe399a4d0c5cf3",
+   "paper:AdaLoRA.pdf": "7afe399a4d0c5cf3",
+   "paper:Bayesian-LoRA: Probabilistic Low-Rank Adaptation of Large Language Models.pdf": "848442f924d976d3",
+   "paper:HiLoRA-Hierarchical Low-Rank Adaptation for Personalized Federated Learning.pdf": "e2c02adae75e367e",
+   "paper:Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning.pdf": "e3205485a4222770",
+   "paper:LoRA- Low-Rank Adaptation of Large Language Models.pdf": "77cde4587ee4ce61",
+   "paper:Measuring the Intrinsic Di- mension of Objective Landscapes..pdf": "4536c546d45f7f2f",
+   "paper:QLoRA-Efficient Finetuning of Quantized LLMs.pdf": "33a4e757c19d6ea8"
+  }
+ },
+ "communities": [
+  {
+   "id": "lora-theory",
+   "name": "lora-theory",
+   "summary": "社区围绕内在维度理论，两篇论文分别从语言模型微调有效性与目标景观维度提供实证支撑，概念实体提炼ID假说，阐明LoRA低秩约束的有效性并指导秩选择。"
+  },
+  {
+   "id": "lora-variants",
+   "name": "lora-variants",
+   "summary": "社区围绕LoRA低秩适配展开：LoRA为基础概念，QLoRA、AdaLoRA、Bayesian-LoRA、HiLoRA分别从量化、秩分配、概率推断与联邦分层角度扩展其职责，各论文实体对应阐述相应变体方法。"
+  },
+  {
+   "id": "loralib-core",
+   "name": "loralib-core",
+   "summary": "loralib-core 社区包含 LoRALayer 基类及 Embedding、Linear、MergedLinear、ConvLoRA 等子类，各子类实现初始化、重置参数、训练与前向方法；utils.py 提供可训练标记与状态字典函数，setup.py 负责打包。"
+  },
+  {
+   "id": "nlg-examples",
+   "name": "nlg-examples",
+   "summary": "该社区围绕NLG示例构建，data_utils提供语料与迭代器，encoder负责BPE编解码，model定义GPT2结构，optimizer管理优化与调度，gpt2_ft/beam/decode支撑训练与生成，gpu与exp_utils提供分布式及实验辅助。"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "file:loralib/__init__.py",
+   "type": "File",
+   "name": "loralib/__init__.py",
+   "community": "loralib-core",
+   "properties": {
+    "path": "loralib/__init__.py",
+    "description": "4 lines",
+    "loc": 4
+   }
+  },
+  {
+   "id": "file:loralib/layers.py",
+   "type": "File",
+   "name": "loralib/layers.py",
+   "community": "loralib-core",
+   "properties": {
+    "path": "loralib/layers.py",
+    "description": "311 lines",
+    "loc": 311
+   }
+  },
+  {
+   "id": "class:LoRALayer",
+   "type": "Class",
+   "name": "LoRALayer",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class LoRALayer",
+    "bases": []
+   }
+  },
+  {
+   "id": "method:LoRALayer.__init__",
+   "type": "Method",
+   "name": "LoRALayer.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "LoRALayer",
+    "signature": "(self, r: int, lora_alpha: int, lora_dropout: float, merge_weights: bool)",
+    "description": "method __init__ of LoRALayer"
+   }
+  },
+  {
+   "id": "class:Embedding",
+   "type": "Class",
+   "name": "Embedding",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class Embedding",
+    "bases": [
+     "nn.Embedding",
+     "LoRALayer"
+    ]
+   }
+  },
+  {
+   "id": "method:Embedding.__init__",
+   "type": "Method",
+   "name": "Embedding.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Embedding",
+    "signature": "(self, num_embeddings: int, embedding_dim: int, r: int=0, lora_alpha: int=1, merge_weights: bool=True, **kwargs)",
+    "description": "method __init__ of Embedding"
+   }
+  },
+  {
+   "id": "method:Embedding.reset_parameters",
+   "type": "Method",
+   "name": "Embedding.reset_parameters",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Embedding",
+    "signature": "(self)",
+    "description": "method reset_parameters of Embedding"
+   }
+  },
+  {
+   "id": "method:Embedding.train",
+   "type": "Method",
+   "name": "Embedding.train",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Embedding",
+    "signature": "(self, mode: bool=True)",
+    "description": "method train of Embedding"
+   }
+  },
+  {
+   "id": "method:Embedding.forward",
+   "type": "Method",
+   "name": "Embedding.forward",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Embedding",
+    "signature": "(self, x: torch.Tensor)",
+    "description": "method forward of Embedding"
+   }
+  },
+  {
+   "id": "class:Linear",
+   "type": "Class",
+   "name": "Linear",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class Linear",
+    "bases": [
+     "nn.Linear",
+     "LoRALayer"
+    ]
+   }
+  },
+  {
+   "id": "method:Linear.__init__",
+   "type": "Method",
+   "name": "Linear.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Linear",
+    "signature": "(self, in_features: int, out_features: int, r: int=0, lora_alpha: int=1, lora_dropout: float=0.0, fan_in_fan_out: bool=False, merge_weights: bool=True, **kwargs)",
+    "description": "method __init__ of Linear"
+   }
+  },
+  {
+   "id": "method:Linear.reset_parameters",
+   "type": "Method",
+   "name": "Linear.reset_parameters",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Linear",
+    "signature": "(self)",
+    "description": "method reset_parameters of Linear"
+   }
+  },
+  {
+   "id": "method:Linear.train",
+   "type": "Method",
+   "name": "Linear.train",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Linear",
+    "signature": "(self, mode: bool=True)",
+    "description": "method train of Linear"
+   }
+  },
+  {
+   "id": "method:Linear.forward",
+   "type": "Method",
+   "name": "Linear.forward",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Linear",
+    "signature": "(self, x: torch.Tensor)",
+    "description": "method forward of Linear"
+   }
+  },
+  {
+   "id": "class:MergedLinear",
+   "type": "Class",
+   "name": "MergedLinear",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class MergedLinear",
+    "bases": [
+     "nn.Linear",
+     "LoRALayer"
+    ]
+   }
+  },
+  {
+   "id": "method:MergedLinear.__init__",
+   "type": "Method",
+   "name": "MergedLinear.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "MergedLinear",
+    "signature": "(self, in_features: int, out_features: int, r: int=0, lora_alpha: int=1, lora_dropout: float=0.0, enable_lora: List[bool]=[False], fan_in_fan_out: bool=False, merge_weights: bool=True, **kwargs)",
+    "description": "method __init__ of MergedLinear"
+   }
+  },
+  {
+   "id": "method:MergedLinear.reset_parameters",
+   "type": "Method",
+   "name": "MergedLinear.reset_parameters",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "MergedLinear",
+    "signature": "(self)",
+    "description": "method reset_parameters of MergedLinear"
+   }
+  },
+  {
+   "id": "method:MergedLinear.zero_pad",
+   "type": "Method",
+   "name": "MergedLinear.zero_pad",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "MergedLinear",
+    "signature": "(self, x)",
+    "description": "method zero_pad of MergedLinear"
+   }
+  },
+  {
+   "id": "method:MergedLinear.merge_AB",
+   "type": "Method",
+   "name": "MergedLinear.merge_AB",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "MergedLinear",
+    "signature": "(self)",
+    "description": "method merge_AB of MergedLinear"
+   }
+  },
+  {
+   "id": "method:MergedLinear.train",
+   "type": "Method",
+   "name": "MergedLinear.train",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "MergedLinear",
+    "signature": "(self, mode: bool=True)",
+    "description": "method train of MergedLinear"
+   }
+  },
+  {
+   "id": "method:MergedLinear.forward",
+   "type": "Method",
+   "name": "MergedLinear.forward",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "MergedLinear",
+    "signature": "(self, x: torch.Tensor)",
+    "description": "method forward of MergedLinear"
+   }
+  },
+  {
+   "id": "class:ConvLoRA",
+   "type": "Class",
+   "name": "ConvLoRA",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class ConvLoRA",
+    "bases": [
+     "nn.Module",
+     "LoRALayer"
+    ]
+   }
+  },
+  {
+   "id": "method:ConvLoRA.__init__",
+   "type": "Method",
+   "name": "ConvLoRA.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "ConvLoRA",
+    "signature": "(self, conv_module, in_channels, out_channels, kernel_size, r=0, lora_alpha=1, lora_dropout=0.0, merge_weights=True, **kwargs)",
+    "description": "method __init__ of ConvLoRA"
+   }
+  },
+  {
+   "id": "method:ConvLoRA.reset_parameters",
+   "type": "Method",
+   "name": "ConvLoRA.reset_parameters",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "ConvLoRA",
+    "signature": "(self)",
+    "description": "method reset_parameters of ConvLoRA"
+   }
+  },
+  {
+   "id": "method:ConvLoRA.train",
+   "type": "Method",
+   "name": "ConvLoRA.train",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "ConvLoRA",
+    "signature": "(self, mode=True)",
+    "description": "method train of ConvLoRA"
+   }
+  },
+  {
+   "id": "method:ConvLoRA.forward",
+   "type": "Method",
+   "name": "ConvLoRA.forward",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "ConvLoRA",
+    "signature": "(self, x)",
+    "description": "method forward of ConvLoRA"
+   }
+  },
+  {
+   "id": "class:Conv2d",
+   "type": "Class",
+   "name": "Conv2d",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class Conv2d",
+    "bases": [
+     "ConvLoRA"
+    ]
+   }
+  },
+  {
+   "id": "method:Conv2d.__init__",
+   "type": "Method",
+   "name": "Conv2d.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Conv2d",
+    "signature": "(self, *args, **kwargs)",
+    "description": "method __init__ of Conv2d"
+   }
+  },
+  {
+   "id": "class:Conv1d",
+   "type": "Class",
+   "name": "Conv1d",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class Conv1d",
+    "bases": [
+     "ConvLoRA"
+    ]
+   }
+  },
+  {
+   "id": "method:Conv1d.__init__",
+   "type": "Method",
+   "name": "Conv1d.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Conv1d",
+    "signature": "(self, *args, **kwargs)",
+    "description": "method __init__ of Conv1d"
+   }
+  },
+  {
+   "id": "class:Conv3d",
+   "type": "Class",
+   "name": "Conv3d",
+   "community": "loralib-core",
+   "properties": {
+    "description": "class Conv3d",
+    "bases": [
+     "ConvLoRA"
+    ]
+   }
+  },
+  {
+   "id": "method:Conv3d.__init__",
+   "type": "Method",
+   "name": "Conv3d.__init__",
+   "community": "loralib-core",
+   "properties": {
+    "owner": "Conv3d",
+    "signature": "(self, *args, **kwargs)",
+    "description": "method __init__ of Conv3d"
+   }
+  },
+  {
+   "id": "file:loralib/utils.py",
+   "type": "File",
+   "name": "loralib/utils.py",
+   "community": "loralib-core",
+   "properties": {
+    "path": "loralib/utils.py",
+    "description": "49 lines",
+    "loc": 49
+   }
+  },
+  {
+   "id": "func:mark_only_lora_as_trainable",
+   "type": "Function",
+   "name": "mark_only_lora_as_trainable",
+   "community": "loralib-core",
+   "properties": {
+    "signature": "(model: nn.Module, bias: str='none')",
+    "description": "function mark_only_lora_as_trainable"
+   }
+  },
+  {
+   "id": "func:lora_state_dict",
+   "type": "Function",
+   "name": "lora_state_dict",
+   "community": "loralib-core",
+   "properties": {
+    "signature": "(model: nn.Module, bias: str='none')",
+    "description": "function lora_state_dict"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/data_utils.py",
+   "type": "File",
+   "name": "examples/NLG/src/data_utils.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/data_utils.py",
+    "description": "269 lines",
+    "loc": 269
+   }
+  },
+  {
+   "id": "class:LMOrderedIterator",
+   "type": "Class",
+   "name": "LMOrderedIterator",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class LMOrderedIterator",
+    "bases": [
+     "object"
+    ]
+   }
+  },
+  {
+   "id": "method:LMOrderedIterator.__init__",
+   "type": "Method",
+   "name": "LMOrderedIterator.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "LMOrderedIterator",
+    "signature": "(self, data, bsz, bptt, eval_len=None, device='cpu', world_size=1, rank=0)",
+    "description": "data -- LongTensor -- the LongTensor is strictly ordered"
+   }
+  },
+  {
+   "id": "method:LMOrderedIterator.__iter__",
+   "type": "Method",
+   "name": "LMOrderedIterator.__iter__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "LMOrderedIterator",
+    "signature": "(self)",
+    "description": "method __iter__ of LMOrderedIterator"
+   }
+  },
+  {
+   "id": "method:LMOrderedIterator.get_batch",
+   "type": "Method",
+   "name": "LMOrderedIterator.get_batch",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "LMOrderedIterator",
+    "signature": "(self, i, bptt, eval_len)",
+    "description": "method get_batch of LMOrderedIterator"
+   }
+  },
+  {
+   "id": "method:LMOrderedIterator.get_fixlen_iter",
+   "type": "Method",
+   "name": "LMOrderedIterator.get_fixlen_iter",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "LMOrderedIterator",
+    "signature": "(self, start=0)",
+    "description": "method get_fixlen_iter of LMOrderedIterator"
+   }
+  },
+  {
+   "id": "class:Corpus",
+   "type": "Class",
+   "name": "Corpus",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class Corpus",
+    "bases": [
+     "object"
+    ]
+   }
+  },
+  {
+   "id": "method:Corpus.__init__",
+   "type": "Method",
+   "name": "Corpus.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Corpus",
+    "signature": "(self, path)",
+    "description": "method __init__ of Corpus"
+   }
+  },
+  {
+   "id": "class:BinLMOrderedIterator",
+   "type": "Class",
+   "name": "BinLMOrderedIterator",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class BinLMOrderedIterator",
+    "bases": [
+     "object"
+    ]
+   }
+  },
+  {
+   "id": "method:BinLMOrderedIterator.__init__",
+   "type": "Method",
+   "name": "BinLMOrderedIterator.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "BinLMOrderedIterator",
+    "signature": "(self, corpus, bsz, bptt, eval_len=None, device='cpu', world_size=1, rank=0)",
+    "description": "data -- LongTensor -- the LongTensor is strictly ordered"
+   }
+  },
+  {
+   "id": "method:BinLMOrderedIterator.__iter__",
+   "type": "Method",
+   "name": "BinLMOrderedIterator.__iter__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "BinLMOrderedIterator",
+    "signature": "(self)",
+    "description": "method __iter__ of BinLMOrderedIterator"
+   }
+  },
+  {
+   "id": "method:BinLMOrderedIterator.get_batch",
+   "type": "Method",
+   "name": "BinLMOrderedIterator.get_batch",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "BinLMOrderedIterator",
+    "signature": "(self, i, bptt, eval_len)",
+    "description": "method get_batch of BinLMOrderedIterator"
+   }
+  },
+  {
+   "id": "method:BinLMOrderedIterator.get_fixlen_iter",
+   "type": "Method",
+   "name": "BinLMOrderedIterator.get_fixlen_iter",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "BinLMOrderedIterator",
+    "signature": "(self, start=0)",
+    "description": "method get_fixlen_iter of BinLMOrderedIterator"
+   }
+  },
+  {
+   "id": "class:BinCorpus",
+   "type": "Class",
+   "name": "BinCorpus",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class BinCorpus",
+    "bases": [
+     "object"
+    ]
+   }
+  },
+  {
+   "id": "method:BinCorpus.__init__",
+   "type": "Method",
+   "name": "BinCorpus.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "BinCorpus",
+    "signature": "(self, path)",
+    "description": "method __init__ of BinCorpus"
+   }
+  },
+  {
+   "id": "method:BinCorpus.get_tokens",
+   "type": "Method",
+   "name": "BinCorpus.get_tokens",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "BinCorpus",
+    "signature": "(self, offset, count)",
+    "description": "method get_tokens of BinCorpus"
+   }
+  },
+  {
+   "id": "func:get_lm_corpus",
+   "type": "Function",
+   "name": "get_lm_corpus",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(data)",
+    "description": "function get_lm_corpus"
+   }
+  },
+  {
+   "id": "func:padding_tokens",
+   "type": "Function",
+   "name": "padding_tokens",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(tokens, max_seq_length, pad_token, direct, max_context_length=0)",
+    "description": "function padding_tokens"
+   }
+  },
+  {
+   "id": "class:FT_Dataset",
+   "type": "Class",
+   "name": "FT_Dataset",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class FT_Dataset",
+    "bases": [
+     "Dataset"
+    ]
+   }
+  },
+  {
+   "id": "method:FT_Dataset.__init__",
+   "type": "Method",
+   "name": "FT_Dataset.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "FT_Dataset",
+    "signature": "(self, ft_file, batch_size, max_seq_length, max_eval_length=0, joint_lm=False, prefix_len=0, infix_len=0, prefix_cursor=1000000, infix_cursor=2000000)",
+    "description": "method __init__ of FT_Dataset"
+   }
+  },
+  {
+   "id": "method:FT_Dataset.__len__",
+   "type": "Method",
+   "name": "FT_Dataset.__len__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "FT_Dataset",
+    "signature": "(self)",
+    "description": "method __len__ of FT_Dataset"
+   }
+  },
+  {
+   "id": "method:FT_Dataset.__getitem__",
+   "type": "Method",
+   "name": "FT_Dataset.__getitem__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "FT_Dataset",
+    "signature": "(self, item)",
+    "description": "method __getitem__ of FT_Dataset"
+   }
+  },
+  {
+   "id": "method:FT_Dataset.read_ft_file",
+   "type": "Method",
+   "name": "FT_Dataset.read_ft_file",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "FT_Dataset",
+    "signature": "(self, ft_file)",
+    "description": "method read_ft_file of FT_Dataset"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/encoder.py",
+   "type": "File",
+   "name": "examples/NLG/src/encoder.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/encoder.py",
+    "description": "132 lines",
+    "loc": 132
+   }
+  },
+  {
+   "id": "func:bytes_to_unicode",
+   "type": "Function",
+   "name": "bytes_to_unicode",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "()",
+    "description": "Returns list of utf-8 byte and a corresponding list of unicode strings."
+   }
+  },
+  {
+   "id": "func:get_pairs",
+   "type": "Function",
+   "name": "get_pairs",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(word)",
+    "description": "Return set of symbol pairs in a word."
+   }
+  },
+  {
+   "id": "class:Encoder",
+   "type": "Class",
+   "name": "Encoder",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class Encoder",
+    "bases": []
+   }
+  },
+  {
+   "id": "method:Encoder.__init__",
+   "type": "Method",
+   "name": "Encoder.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Encoder",
+    "signature": "(self, encoder, bpe_merges, errors='replace')",
+    "description": "method __init__ of Encoder"
+   }
+  },
+  {
+   "id": "method:Encoder.bpe",
+   "type": "Method",
+   "name": "Encoder.bpe",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Encoder",
+    "signature": "(self, token)",
+    "description": "method bpe of Encoder"
+   }
+  },
+  {
+   "id": "method:Encoder.encode",
+   "type": "Method",
+   "name": "Encoder.encode",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Encoder",
+    "signature": "(self, text)",
+    "description": "method encode of Encoder"
+   }
+  },
+  {
+   "id": "method:Encoder.decode",
+   "type": "Method",
+   "name": "Encoder.decode",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Encoder",
+    "signature": "(self, tokens)",
+    "description": "method decode of Encoder"
+   }
+  },
+  {
+   "id": "func:get_encoder",
+   "type": "Function",
+   "name": "get_encoder",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(models_dir)",
+    "description": "function get_encoder"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/exp_utils.py",
+   "type": "File",
+   "name": "examples/NLG/src/exp_utils.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/exp_utils.py",
+    "description": "46 lines",
+    "loc": 46
+   }
+  },
+  {
+   "id": "func:logging",
+   "type": "Function",
+   "name": "logging",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(s, log_path, print_=True, log_=True)",
+    "description": "function logging"
+   }
+  },
+  {
+   "id": "func:get_logger",
+   "type": "Function",
+   "name": "get_logger",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(log_path, **kwargs)",
+    "description": "function get_logger"
+   }
+  },
+  {
+   "id": "func:create_exp_dir",
+   "type": "Function",
+   "name": "create_exp_dir",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(dir_path, scripts_to_save=None, debug=False)",
+    "description": "function create_exp_dir"
+   }
+  },
+  {
+   "id": "func:save_checkpoint",
+   "type": "Function",
+   "name": "save_checkpoint",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, optimizer, path, epoch)",
+    "description": "function save_checkpoint"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/format_converting_dart.py",
+   "type": "File",
+   "name": "examples/NLG/src/format_converting_dart.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/format_converting_dart.py",
+    "description": "43 lines",
+    "loc": 43
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/format_converting_e2e.py",
+   "type": "File",
+   "name": "examples/NLG/src/format_converting_e2e.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/format_converting_e2e.py",
+    "description": "20 lines",
+    "loc": 20
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/format_converting_webnlg.py",
+   "type": "File",
+   "name": "examples/NLG/src/format_converting_webnlg.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/format_converting_webnlg.py",
+    "description": "68 lines",
+    "loc": 68
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/gpt2_beam.py",
+   "type": "File",
+   "name": "examples/NLG/src/gpt2_beam.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/gpt2_beam.py",
+    "description": "392 lines",
+    "loc": 392
+   }
+  },
+  {
+   "id": "func:print_args",
+   "type": "Function",
+   "name": "print_args",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(args)",
+    "description": "function print_args"
+   }
+  },
+  {
+   "id": "func:_reorder_cache",
+   "type": "Function",
+   "name": "_reorder_cache",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(past: Tuple, beam_idx: Tensor)",
+    "description": "function _reorder_cache"
+   }
+  },
+  {
+   "id": "func:_calc_banned_ngram_tokens",
+   "type": "Function",
+   "name": "_calc_banned_ngram_tokens",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(prev_input_ids: Tensor, num_hypos: int, no_repeat_ngram_size: int, cur_len: int)",
+    "description": "Copied from fairseq for no_repeat_ngram in beam_search"
+   }
+  },
+  {
+   "id": "func:_enforce_repetition_penalty_",
+   "type": "Function",
+   "name": "_enforce_repetition_penalty_",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(lprobs, batch_size, num_beams, prev_output_tokens, repetition_penalty)",
+    "description": "repetition penalty (from CTRL paper https://arxiv.org/abs/1909.05858)."
+   }
+  },
+  {
+   "id": "func:_postprocess_next_token_scores",
+   "type": "Function",
+   "name": "_postprocess_next_token_scores",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(scores, history, cur_len, batch_size, num_beams, repetition_penalty=1.0, no_repeat_ngram_size=4, bad_words_ids=None, min_length=0, max_length=100, eos_token_id=None)",
+    "description": "function _postprocess_next_token_scores"
+   }
+  },
+  {
+   "id": "func:_add_beam_candidate",
+   "type": "Function",
+   "name": "_add_beam_candidate",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(best_score, best_sequence, batch_size, num_beams, beam_scores, history, eos_token_id=None)",
+    "description": "function _add_beam_candidate"
+   }
+  },
+  {
+   "id": "func:beam",
+   "type": "Function",
+   "name": "beam",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, data_iter, args)",
+    "description": "function beam"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/gpt2_decode.py",
+   "type": "File",
+   "name": "examples/NLG/src/gpt2_decode.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/gpt2_decode.py",
+    "description": "162 lines",
+    "loc": 162
+   }
+  },
+  {
+   "id": "func:stardard_tokenize",
+   "type": "Function",
+   "name": "stardard_tokenize",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(sent)",
+    "description": "function stardard_tokenize"
+   }
+  },
+  {
+   "id": "func:post_process",
+   "type": "Function",
+   "name": "post_process",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(sent, is_tokenize, is_lower)",
+    "description": "function post_process"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/gpt2_encode.py",
+   "type": "File",
+   "name": "examples/NLG/src/gpt2_encode.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/gpt2_encode.py",
+    "description": "70 lines",
+    "loc": 70
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/gpt2_ft.py",
+   "type": "File",
+   "name": "examples/NLG/src/gpt2_ft.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/gpt2_ft.py",
+    "description": "361 lines",
+    "loc": 361
+   }
+  },
+  {
+   "id": "class:AverageMeter",
+   "type": "Class",
+   "name": "AverageMeter",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "Computes and stores the average and current value",
+    "bases": [
+     "object"
+    ]
+   }
+  },
+  {
+   "id": "method:AverageMeter.__init__",
+   "type": "Method",
+   "name": "AverageMeter.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "AverageMeter",
+    "signature": "(self)",
+    "description": "method __init__ of AverageMeter"
+   }
+  },
+  {
+   "id": "method:AverageMeter.reset",
+   "type": "Method",
+   "name": "AverageMeter.reset",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "AverageMeter",
+    "signature": "(self)",
+    "description": "method reset of AverageMeter"
+   }
+  },
+  {
+   "id": "method:AverageMeter.update",
+   "type": "Method",
+   "name": "AverageMeter.update",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "AverageMeter",
+    "signature": "(self, val, n=1)",
+    "description": "method update of AverageMeter"
+   }
+  },
+  {
+   "id": "func:optimizer_step",
+   "type": "Function",
+   "name": "optimizer_step",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(_loss, _optimizer, _model, _schedule, args, is_update=True)",
+    "description": "function optimizer_step"
+   }
+  },
+  {
+   "id": "func:evaluate",
+   "type": "Function",
+   "name": "evaluate",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, valid_loader, args)",
+    "description": "function evaluate"
+   }
+  },
+  {
+   "id": "func:train_validate",
+   "type": "Function",
+   "name": "train_validate",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, optimizer, scheduler, train_loader, valid_loader, args, train_step=0, epoch=0)",
+    "description": "function train_validate"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/gpu.py",
+   "type": "File",
+   "name": "examples/NLG/src/gpu.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/gpu.py",
+    "description": "126 lines",
+    "loc": 126
+   }
+  },
+  {
+   "id": "func:add_gpu_params",
+   "type": "Function",
+   "name": "add_gpu_params",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(parser: argparse.ArgumentParser)",
+    "description": "function add_gpu_params"
+   }
+  },
+  {
+   "id": "func:distributed_opt",
+   "type": "Function",
+   "name": "distributed_opt",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(args, model, opt, grad_acc=1)",
+    "description": "function distributed_opt"
+   }
+  },
+  {
+   "id": "func:distributed_gather",
+   "type": "Function",
+   "name": "distributed_gather",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(args, tensor)",
+    "description": "function distributed_gather"
+   }
+  },
+  {
+   "id": "func:distributed_sync",
+   "type": "Function",
+   "name": "distributed_sync",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(args)",
+    "description": "function distributed_sync"
+   }
+  },
+  {
+   "id": "func:parse_gpu",
+   "type": "Function",
+   "name": "parse_gpu",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(args)",
+    "description": "function parse_gpu"
+   }
+  },
+  {
+   "id": "func:cleanup",
+   "type": "Function",
+   "name": "cleanup",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(args)",
+    "description": "function cleanup"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/model.py",
+   "type": "File",
+   "name": "examples/NLG/src/model.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/model.py",
+    "description": "449 lines",
+    "loc": 449
+   }
+  },
+  {
+   "id": "func:gelu",
+   "type": "Function",
+   "name": "gelu",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(x)",
+    "description": "function gelu"
+   }
+  },
+  {
+   "id": "func:gelu_fast",
+   "type": "Function",
+   "name": "gelu_fast",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(x)",
+    "description": "function gelu_fast"
+   }
+  },
+  {
+   "id": "func:gelu_new",
+   "type": "Function",
+   "name": "gelu_new",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(x)",
+    "description": "Implementation of the gelu activation function currently in Google Bert repo (identical to OpenAI GPT)."
+   }
+  },
+  {
+   "id": "func:swish",
+   "type": "Function",
+   "name": "swish",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(x)",
+    "description": "function swish"
+   }
+  },
+  {
+   "id": "func:_gelu_python",
+   "type": "Function",
+   "name": "_gelu_python",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(x)",
+    "description": "Original Implementation of the gelu activation function in Google Bert repo when initially created."
+   }
+  },
+  {
+   "id": "class:LayerNorm",
+   "type": "Class",
+   "name": "LayerNorm",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class LayerNorm",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:LayerNorm.__init__",
+   "type": "Method",
+   "name": "LayerNorm.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "LayerNorm",
+    "signature": "(self, hidden_size, eps=1e-12)",
+    "description": "Construct a layernorm module in the TF style (epsilon inside the square root)."
+   }
+  },
+  {
+   "id": "method:LayerNorm.forward",
+   "type": "Method",
+   "name": "LayerNorm.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "LayerNorm",
+    "signature": "(self, x)",
+    "description": "method forward of LayerNorm"
+   }
+  },
+  {
+   "id": "class:Conv1D",
+   "type": "Class",
+   "name": "Conv1D",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class Conv1D",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:Conv1D.__init__",
+   "type": "Method",
+   "name": "Conv1D.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Conv1D",
+    "signature": "(self, nf, nx)",
+    "description": "method __init__ of Conv1D"
+   }
+  },
+  {
+   "id": "method:Conv1D.forward",
+   "type": "Method",
+   "name": "Conv1D.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Conv1D",
+    "signature": "(self, x)",
+    "description": "method forward of Conv1D"
+   }
+  },
+  {
+   "id": "class:Attention",
+   "type": "Class",
+   "name": "Attention",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class Attention",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:Attention.__init__",
+   "type": "Method",
+   "name": "Attention.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Attention",
+    "signature": "(self, nx, n_ctx, config, scale=False)",
+    "description": "method __init__ of Attention"
+   }
+  },
+  {
+   "id": "method:Attention._attn",
+   "type": "Method",
+   "name": "Attention._attn",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Attention",
+    "signature": "(self, q, k, v, len_kv=None)",
+    "description": "method _attn of Attention"
+   }
+  },
+  {
+   "id": "method:Attention.merge_heads",
+   "type": "Method",
+   "name": "Attention.merge_heads",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Attention",
+    "signature": "(self, x)",
+    "description": "method merge_heads of Attention"
+   }
+  },
+  {
+   "id": "method:Attention.split_heads",
+   "type": "Method",
+   "name": "Attention.split_heads",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Attention",
+    "signature": "(self, x, k=False)",
+    "description": "method split_heads of Attention"
+   }
+  },
+  {
+   "id": "method:Attention.forward",
+   "type": "Method",
+   "name": "Attention.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Attention",
+    "signature": "(self, x, history=None, layer_past=None, len_past=None)",
+    "description": "method forward of Attention"
+   }
+  },
+  {
+   "id": "class:MLP",
+   "type": "Class",
+   "name": "MLP",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class MLP",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:MLP.__init__",
+   "type": "Method",
+   "name": "MLP.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "MLP",
+    "signature": "(self, n_state, config)",
+    "description": "method __init__ of MLP"
+   }
+  },
+  {
+   "id": "method:MLP.forward",
+   "type": "Method",
+   "name": "MLP.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "MLP",
+    "signature": "(self, x)",
+    "description": "method forward of MLP"
+   }
+  },
+  {
+   "id": "class:Block",
+   "type": "Class",
+   "name": "Block",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class Block",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:Block.__init__",
+   "type": "Method",
+   "name": "Block.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Block",
+    "signature": "(self, n_ctx, config, scale=False)",
+    "description": "method __init__ of Block"
+   }
+  },
+  {
+   "id": "method:Block.forward",
+   "type": "Method",
+   "name": "Block.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "Block",
+    "signature": "(self, x, layer_past=None, len_past=None)",
+    "description": "method forward of Block"
+   }
+  },
+  {
+   "id": "class:GPT2Model",
+   "type": "Class",
+   "name": "GPT2Model",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class GPT2Model",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:GPT2Model.__init__",
+   "type": "Method",
+   "name": "GPT2Model.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2Model",
+    "signature": "(self, config)",
+    "description": "method __init__ of GPT2Model"
+   }
+  },
+  {
+   "id": "method:GPT2Model.forward",
+   "type": "Method",
+   "name": "GPT2Model.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2Model",
+    "signature": "(self, input_ids, position_ids=None, token_type_ids=None, past=None, len_past=None)",
+    "description": "method forward of GPT2Model"
+   }
+  },
+  {
+   "id": "class:GPT2LMHead",
+   "type": "Class",
+   "name": "GPT2LMHead",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class GPT2LMHead",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:GPT2LMHead.__init__",
+   "type": "Method",
+   "name": "GPT2LMHead.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMHead",
+    "signature": "(self, model_embeddings_weights, config)",
+    "description": "method __init__ of GPT2LMHead"
+   }
+  },
+  {
+   "id": "method:GPT2LMHead.set_embeddings_weights",
+   "type": "Method",
+   "name": "GPT2LMHead.set_embeddings_weights",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMHead",
+    "signature": "(self, model_embeddings_weights)",
+    "description": "method set_embeddings_weights of GPT2LMHead"
+   }
+  },
+  {
+   "id": "method:GPT2LMHead.forward",
+   "type": "Method",
+   "name": "GPT2LMHead.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMHead",
+    "signature": "(self, hidden_state)",
+    "description": "method forward of GPT2LMHead"
+   }
+  },
+  {
+   "id": "class:GPT2Config",
+   "type": "Class",
+   "name": "GPT2Config",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class GPT2Config",
+    "bases": [
+     "object"
+    ]
+   }
+  },
+  {
+   "id": "method:GPT2Config.__init__",
+   "type": "Method",
+   "name": "GPT2Config.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2Config",
+    "signature": "(self, vocab_size_or_config_json_file=50257, n_positions=1024, n_ctx=1024, n_embd=768, n_layer=12, n_head=12, layer_norm_epsilon=1e-05, initializer_range=0.02, lora_attn_dim=0, lora_attn_alpha=128, lora_dropout=0.0, lora_r_dropout=0.0, fix_dropout=0.0)",
+    "description": "method __init__ of GPT2Config"
+   }
+  },
+  {
+   "id": "class:GPT2LMModel",
+   "type": "Class",
+   "name": "GPT2LMModel",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class GPT2LMModel",
+    "bases": [
+     "nn.Module"
+    ]
+   }
+  },
+  {
+   "id": "method:GPT2LMModel.__init__",
+   "type": "Method",
+   "name": "GPT2LMModel.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMModel",
+    "signature": "(self, config)",
+    "description": "method __init__ of GPT2LMModel"
+   }
+  },
+  {
+   "id": "method:GPT2LMModel.set_tied",
+   "type": "Method",
+   "name": "GPT2LMModel.set_tied",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMModel",
+    "signature": "(self)",
+    "description": "Make sure we are sharing the embeddings"
+   }
+  },
+  {
+   "id": "method:GPT2LMModel.forward",
+   "type": "Method",
+   "name": "GPT2LMModel.forward",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMModel",
+    "signature": "(self, input_ids, lm_labels=None, lm_mask=None, past=None, len_past=None, label_smooth=0.0, is_report_accuracy=False)",
+    "description": "method forward of GPT2LMModel"
+   }
+  },
+  {
+   "id": "method:GPT2LMModel._init_weights",
+   "type": "Method",
+   "name": "GPT2LMModel._init_weights",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMModel",
+    "signature": "(self, module)",
+    "description": "method _init_weights of GPT2LMModel"
+   }
+  },
+  {
+   "id": "method:GPT2LMModel.load_weight",
+   "type": "Method",
+   "name": "GPT2LMModel.load_weight",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "GPT2LMModel",
+    "signature": "(self, state_dict)",
+    "description": "method load_weight of GPT2LMModel"
+   }
+  },
+  {
+   "id": "file:examples/NLG/src/optimizer.py",
+   "type": "File",
+   "name": "examples/NLG/src/optimizer.py",
+   "community": "nlg-examples",
+   "properties": {
+    "path": "examples/NLG/src/optimizer.py",
+    "description": "360 lines",
+    "loc": 360
+   }
+  },
+  {
+   "id": "func:add_optimizer_params",
+   "type": "Function",
+   "name": "add_optimizer_params",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(parser: argparse.ArgumentParser)",
+    "description": "function add_optimizer_params"
+   }
+  },
+  {
+   "id": "class:AdamW",
+   "type": "Class",
+   "name": "AdamW",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "Implements Adam algorithm with weight decay fix.",
+    "bases": [
+     "Optimizer"
+    ]
+   }
+  },
+  {
+   "id": "method:AdamW.__init__",
+   "type": "Method",
+   "name": "AdamW.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "AdamW",
+    "signature": "(self, params, lr=0.001, betas=(0.9, 0.98), eps=1e-06, weight_decay=0.0, correct_bias=True)",
+    "description": "method __init__ of AdamW"
+   }
+  },
+  {
+   "id": "method:AdamW.reset_state",
+   "type": "Method",
+   "name": "AdamW.reset_state",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "AdamW",
+    "signature": "(self)",
+    "description": "method reset_state of AdamW"
+   }
+  },
+  {
+   "id": "method:AdamW.step",
+   "type": "Method",
+   "name": "AdamW.step",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "AdamW",
+    "signature": "(self, closure=None)",
+    "description": "Performs a single optimization step."
+   }
+  },
+  {
+   "id": "class:CosineAnnealingWarmupRestarts",
+   "type": "Class",
+   "name": "CosineAnnealingWarmupRestarts",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "optimizer (Optimizer): Wrapped optimizer.",
+    "bases": [
+     "_LRScheduler"
+    ]
+   }
+  },
+  {
+   "id": "method:CosineAnnealingWarmupRestarts.__init__",
+   "type": "Method",
+   "name": "CosineAnnealingWarmupRestarts.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CosineAnnealingWarmupRestarts",
+    "signature": "(self, optimizer: torch.optim.Optimizer, max_lr: float=0.1, min_lr: float=0.0, warmup_steps: int=0, max_steps: int=1, alpha: float=0.0, last_epoch: int=-1)",
+    "description": "method __init__ of CosineAnnealingWarmupRestarts"
+   }
+  },
+  {
+   "id": "method:CosineAnnealingWarmupRestarts.init_lr",
+   "type": "Method",
+   "name": "CosineAnnealingWarmupRestarts.init_lr",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CosineAnnealingWarmupRestarts",
+    "signature": "(self)",
+    "description": "method init_lr of CosineAnnealingWarmupRestarts"
+   }
+  },
+  {
+   "id": "method:CosineAnnealingWarmupRestarts.get_lr",
+   "type": "Method",
+   "name": "CosineAnnealingWarmupRestarts.get_lr",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CosineAnnealingWarmupRestarts",
+    "signature": "(self)",
+    "description": "method get_lr of CosineAnnealingWarmupRestarts"
+   }
+  },
+  {
+   "id": "method:CosineAnnealingWarmupRestarts.step",
+   "type": "Method",
+   "name": "CosineAnnealingWarmupRestarts.step",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CosineAnnealingWarmupRestarts",
+    "signature": "(self, epoch=None)",
+    "description": "method step of CosineAnnealingWarmupRestarts"
+   }
+  },
+  {
+   "id": "class:CyclicScheduler",
+   "type": "Class",
+   "name": "CyclicScheduler",
+   "community": "nlg-examples",
+   "properties": {
+    "description": "class CyclicScheduler",
+    "bases": [
+     "_LRScheduler"
+    ]
+   }
+  },
+  {
+   "id": "method:CyclicScheduler.__init__",
+   "type": "Method",
+   "name": "CyclicScheduler.__init__",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CyclicScheduler",
+    "signature": "(self, optimizer, interval_steps=[], interval_lrs=[], last_epoch=-1)",
+    "description": "method __init__ of CyclicScheduler"
+   }
+  },
+  {
+   "id": "method:CyclicScheduler.init_lr",
+   "type": "Method",
+   "name": "CyclicScheduler.init_lr",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CyclicScheduler",
+    "signature": "(self)",
+    "description": "method init_lr of CyclicScheduler"
+   }
+  },
+  {
+   "id": "method:CyclicScheduler.get_lr",
+   "type": "Method",
+   "name": "CyclicScheduler.get_lr",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CyclicScheduler",
+    "signature": "(self)",
+    "description": "method get_lr of CyclicScheduler"
+   }
+  },
+  {
+   "id": "method:CyclicScheduler.step",
+   "type": "Method",
+   "name": "CyclicScheduler.step",
+   "community": "nlg-examples",
+   "properties": {
+    "owner": "CyclicScheduler",
+    "signature": "(self, epoch=None)",
+    "description": "method step of CyclicScheduler"
+   }
+  },
+  {
+   "id": "func:get_linear_schedule_with_warmup",
+   "type": "Function",
+   "name": "get_linear_schedule_with_warmup",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1)",
+    "description": "Create a schedule with a learning rate that decreases linearly after"
+   }
+  },
+  {
+   "id": "func:get_constant_schedule_with_warmup",
+   "type": "Function",
+   "name": "get_constant_schedule_with_warmup",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1)",
+    "description": "Create a schedule with a learning rate that decreases linearly after"
+   }
+  },
+  {
+   "id": "func:create_grouped_parameters",
+   "type": "Function",
+   "name": "create_grouped_parameters",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, no_decay_bias)",
+    "description": "function create_grouped_parameters"
+   }
+  },
+  {
+   "id": "func:create_adam_optimizer",
+   "type": "Function",
+   "name": "create_adam_optimizer",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, lr, weight_decay, optimizer_grouped_parameters=None, beta1=0.9, beta2=0.98, correct_bias=True, adam_epislon=1e-06, no_decay_bias=False)",
+    "description": "function create_adam_optimizer"
+   }
+  },
+  {
+   "id": "func:create_sgd_optimizer",
+   "type": "Function",
+   "name": "create_sgd_optimizer",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, lr)",
+    "description": "function create_sgd_optimizer"
+   }
+  },
+  {
+   "id": "func:create_adam_optimizer_from_args",
+   "type": "Function",
+   "name": "create_adam_optimizer_from_args",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(model, args, grouped_parameters=None)",
+    "description": "function create_adam_optimizer_from_args"
+   }
+  },
+  {
+   "id": "func:create_optimizer_scheduler",
+   "type": "Function",
+   "name": "create_optimizer_scheduler",
+   "community": "nlg-examples",
+   "properties": {
+    "signature": "(optimizer, args)",
+    "description": "function create_optimizer_scheduler"
+   }
+  },
+  {
+   "id": "file:setup.py",
+   "type": "File",
+   "name": "setup.py",
+   "community": "loralib-core",
+   "properties": {
+    "path": "setup.py",
+    "description": "22 lines",
+    "loc": 22
+   }
+  },
+  {
+   "id": "concept:LoRA",
+   "name": "LoRA",
+   "community": "lora-variants",
+   "properties": {
+    "description": "冻结预训练权重 W, 增量 ΔW=BA (B: d×r, A: r×k, r<<d); 训练 ΔW=B@A*scaling, scaling=alpha/r; 推理可合并零延迟; 初始化 A~kaiming, B=0"
+   },
+   "type": "Concept"
+  },
+  {
+   "id": "concept:QLoRA",
+   "name": "QLoRA",
+   "community": "lora-variants",
+   "properties": {
+    "description": "基座权重 4-bit NF4 量化冻结, LoRA 旁路以 bf16 训练并反传梯度穿过量化层; 配合双重量化与分页优化器, 65B 模型单卡 48GB 微调"
+   },
+   "type": "Concept"
+  },
+  {
+   "id": "concept:AdaLoRA",
+   "name": "AdaLoRA",
+   "community": "lora-variants",
+   "properties": {
+    "description": "将 ΔW 重参数化为 A(t)B(t) 的 SVD 形式 Λ 对角加权; 按奇异值的 spectral movement 在固定总预算下自适应分配/剪枝秩, 替代 LoRA 均匀秩与固定初始化"
+   },
+   "type": "Concept"
+  },
+  {
+   "id": "concept:BayesianLoRA",
+   "name": "Bayesian-LoRA",
+   "community": "lora-variants",
+   "properties": {
+    "description": "对低秩因子 A,B 施加高斯先验并用变分推断/采样近似后验, 提供不确定性估计; 初始化与训练目标从点估计改为分布参数 (均值+方差)"
+   },
+   "type": "Concept"
+  },
+  {
+   "id": "concept:HiLoRA",
+   "name": "HiLoRA",
+   "community": "lora-variants",
+   "properties": {
+    "description": "个性化联邦学习下的分层 LoRA: 全局共享低秩适配器 + 客户端私有适配器分层聚合, 按客户端数据分布加权聚合 B@A 增量"
+   },
+   "type": "Concept"
+  },
+  {
+   "id": "concept:IntrinsicDim",
+   "name": "Intrinsic-Dimension",
+   "community": "lora-theory",
+   "properties": {
+    "description": "LM 微调的有效参数更新集中在极低内在维度 (ID1 假说: 微调增益可用 <1000 维子空间达到 90%+; ID2: 损失路径内在维度低), 解释了 LoRA 低秩约束为何有效, 指导秩 r 的选择"
+   },
+   "type": "Concept"
+  },
+  {
+   "id": "paper:ADALORA",
+   "type": "Paper",
+   "name": "ADALORA ADAPTIVE BUDGET ALLOCATION FOR PARAMETER EFFICIENT FINE TUNING",
+   "community": "lora-variants",
+   "properties": {
+    "description": "Fine-tuning large pre-trained language models on downstream tasks has become an important paradigm in NLP. However, common practice fine-tunes all of the parameters in a pre-trained model, which becomes prohibitive when a large number of downstream tasks are present. Therefore, many fine-tuning methods are proposed to learn incremental updates of pre-trained weights in a parameter efficient way, e.g., low-rank increments. These methods often evenly distribute the budget of incremental updates across all pre-traine",
+    "file": "ADALORA-ADAPTIVE BUDGET ALLOCATION FOR PARAMETER-EFFICIENT FINE-TUNING.pdf",
+    "abstract": "Fine-tuning large pre-trained language models on downstream tasks has become an important paradigm in NLP. However, common practice fine-tunes all of the parameters in a pre-trained model, which becomes prohibitive when a large number of downstream tasks are present. Therefore, many fine-tuning methods are proposed to learn incremental updates of pre-trained weights in a parameter efficient way, e.g., low-rank increments. These methods often evenly distribute the budget of incremental updates across all pre-traine",
+    "concept": "concept:AdaLoRA"
+   }
+  },
+  {
+   "id": "paper:AdaLoRApdf",
+   "type": "Paper",
+   "name": "AdaLoRA",
+   "community": "lora-variants",
+   "properties": {
+    "description": "Fine-tuning large pre-trained language models on downstream tasks has become an important paradigm in NLP. However, common practice fine-tunes all of the parameters in a pre-trained model, which becomes prohibitive when a large number of downstream tasks are present. Therefore, many fine-tuning methods are proposed to learn incremental updates of pre-trained weights in a parameter efficient way, e.g., low-rank increments. These methods often evenly distribute the budget of incremental updates across all pre-traine",
+    "file": "AdaLoRA.pdf",
+    "abstract": "Fine-tuning large pre-trained language models on downstream tasks has become an important paradigm in NLP. However, common practice fine-tunes all of the parameters in a pre-trained model, which becomes prohibitive when a large number of downstream tasks are present. Therefore, many fine-tuning methods are proposed to learn incremental updates of pre-trained weights in a parameter efficient way, e.g., low-rank increments. These methods often evenly distribute the budget of incremental updates across all pre-traine",
+    "concept": "concept:AdaLoRA"
+   }
+  },
+  {
+   "id": "paper:Bayesian",
+   "type": "Paper",
+   "name": "Bayesian LoRA: Probabilistic Low Rank Adaptation of Large Language Mod",
+   "community": "lora-variants",
+   "properties": {
+    "description": "Large language models are typically optimized for accuracy and, therefore, will guess even when uncertain about their predictions. This prob- lem becomes especially pronounced when the model is fine-tuned on small datasets, which of- ten causes overfitting and results in a tendency toward miscalibration. In this work, we intro- duce Bayesian-LoRA, which reformulates the deterministic LoRA update as a probabilistic low-rank representation inspired by Sparse Gaus- sian Processes (SGP). We identify a structural isomo",
+    "file": "Bayesian-LoRA: Probabilistic Low-Rank Adaptation of Large Language Models.pdf",
+    "abstract": "Large language models are typically optimized for accuracy and, therefore, will guess even when uncertain about their predictions. This prob- lem becomes especially pronounced when the model is fine-tuned on small datasets, which of- ten causes overfitting and results in a tendency toward miscalibration. In this work, we intro- duce Bayesian-LoRA, which reformulates the deterministic LoRA update as a probabilistic low-rank representation inspired by Sparse Gaus- sian Processes (SGP). We identify a structural isomo",
+    "concept": "concept:BayesianLoRA"
+   }
+  },
+  {
+   "id": "paper:HiLoRA",
+   "type": "Paper",
+   "name": "HiLoRA Hierarchical Low Rank Adaptation for Personalized Federated Lea",
+   "community": "lora-variants",
+   "properties": {
+    "description": "Vision Transformers (ViTs) have been widely adopted in vi- sion tasks due to their strong transferability. In Federated Learning (FL), where full fine-tuning is communication- heavy, Low-Rank Adaptation (LoRA) provides an efficient and communication-friendly way to adapt ViTs. However, existing LoRA-based federated tuning methods overlook la- tent client structures in real-world settings, limiting shared representation learning and hindering effective adaptation to unseen clients. To address this, we propose HiLoR",
+    "file": "HiLoRA-Hierarchical Low-Rank Adaptation for Personalized Federated Learning.pdf",
+    "abstract": "Vision Transformers (ViTs) have been widely adopted in vi- sion tasks due to their strong transferability. In Federated Learning (FL), where full fine-tuning is communication- heavy, Low-Rank Adaptation (LoRA) provides an efficient and communication-friendly way to adapt ViTs. However, existing LoRA-based federated tuning methods overlook la- tent client structures in real-world settings, limiting shared representation learning and hindering effective adaptation to unseen clients. To address this, we propose HiLoR",
+    "concept": "concept:HiLoRA"
+   }
+  },
+  {
+   "id": "paper:IntrinsicDimensionalityExplainstheEffectivenessofLanguageModelFine",
+   "type": "Paper",
+   "name": "Intrinsic Dimensionality Explains the Effectiveness of Language Model ",
+   "community": "lora-theory",
+   "properties": {
+    "description": "Although pretrained language models can be ﬁne-tuned to produce state-of-the- art results for a very wide range of language understanding tasks, the dynamics of this process are not well understood, especially in the low data regime. Why can we use relatively vanilla gradient descent algorithms (e.g., without strong reg- ularization) to tune a model with hundreds of millions of parameters on datasets with only hundreds or thousands of labeled examples? In this paper, we argue that analyzing ﬁne-tuning through the",
+    "file": "Intrinsic Dimensionality Explains the Effectiveness of Language Model Fine-Tuning.pdf",
+    "abstract": "Although pretrained language models can be ﬁne-tuned to produce state-of-the- art results for a very wide range of language understanding tasks, the dynamics of this process are not well understood, especially in the low data regime. Why can we use relatively vanilla gradient descent algorithms (e.g., without strong reg- ularization) to tune a model with hundreds of millions of parameters on datasets with only hundreds or thousands of labeled examples? In this paper, we argue that analyzing ﬁne-tuning through the",
+    "concept": "concept:IntrinsicDim"
+   }
+  },
+  {
+   "id": "paper:LoRA",
+   "type": "Paper",
+   "name": "LoRA  Low Rank Adaptation of Large Language Models",
+   "community": "lora-variants",
+   "properties": {
+    "description": "An important paradigm of natural language processing consists of large-scale pre- training on general domain data and adaptation to particular tasks or domains. As we pre-train larger models, full ﬁne-tuning, which retrains all model parameters, becomes less feasible. Using GPT-3 175B as an example – deploying indepen- dent instances of ﬁne-tuned models, each with 175B parameters, is prohibitively expensive. We propose Low-Rank Adaptation, or LoRA, which freezes the pre- trained model weights and injects trainable",
+    "file": "LoRA- Low-Rank Adaptation of Large Language Models.pdf",
+    "abstract": "An important paradigm of natural language processing consists of large-scale pre- training on general domain data and adaptation to particular tasks or domains. As we pre-train larger models, full ﬁne-tuning, which retrains all model parameters, becomes less feasible. Using GPT-3 175B as an example – deploying indepen- dent instances of ﬁne-tuned models, each with 175B parameters, is prohibitively expensive. We propose Low-Rank Adaptation, or LoRA, which freezes the pre- trained model weights and injects trainable",
+    "concept": "concept:LoRA"
+   }
+  },
+  {
+   "id": "paper:MeasuringtheIntrinsicDi",
+   "type": "Paper",
+   "name": "Measuring the Intrinsic Di  mension of Objective Landscapes.",
+   "community": "lora-theory",
+   "properties": {
+    "description": "Many recently trained neural networks employ large numbers of parameters to achieve good performance. One may intuitively use the number of parameters required as a rough gauge of the difﬁculty of a problem. But how accurate are such notions? How many parameters are really needed? In this paper we at- tempt to answer this question by training networks not in their native parameter space, but instead in a smaller, randomly oriented subspace. We slowly increase the dimension of this subspace, note at which dimension",
+    "file": "Measuring the Intrinsic Di- mension of Objective Landscapes..pdf",
+    "abstract": "Many recently trained neural networks employ large numbers of parameters to achieve good performance. One may intuitively use the number of parameters required as a rough gauge of the difﬁculty of a problem. But how accurate are such notions? How many parameters are really needed? In this paper we at- tempt to answer this question by training networks not in their native parameter space, but instead in a smaller, randomly oriented subspace. We slowly increase the dimension of this subspace, note at which dimension",
+    "concept": "concept:IntrinsicDim"
+   }
+  },
+  {
+   "id": "paper:QLoRA",
+   "type": "Paper",
+   "name": "QLoRA Efficient Finetuning of Quantized LLMs",
+   "community": "lora-variants",
+   "properties": {
+    "description": "We present QL ORA, an efficient finetuning approach that reduces memory us- age enough to finetune a 65B parameter model on a single 48GB GPU while preserving full 16-bit finetuning task performance. QL ORA backpropagates gradi- ents through a frozen, 4-bit quantized pretrained language model into Low Rank Adapters (LoRA). Our best model family, which we name Guanaco, outperforms all previous openly released models on the Vicuna benchmark, reaching 99.3% of the performance level of ChatGPT while only requiring 24",
+    "file": "QLoRA-Efficient Finetuning of Quantized LLMs.pdf",
+    "abstract": "We present QL ORA, an efficient finetuning approach that reduces memory us- age enough to finetune a 65B parameter model on a single 48GB GPU while preserving full 16-bit finetuning task performance. QL ORA backpropagates gradi- ents through a frozen, 4-bit quantized pretrained language model into Low Rank Adapters (LoRA). Our best model family, which we name Guanaco, outperforms all previous openly released models on the Vicuna benchmark, reaching 99.3% of the performance level of ChatGPT while only requiring 24",
+    "concept": "concept:QLoRA"
+   }
+  }
+ ],
+ "edges": [
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:LoRALayer",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:LoRALayer.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:Embedding",
+   "relation": "defines"
+  },
+  {
+   "source": "class:Embedding",
+   "target": "class:LoRALayer",
+   "relation": "inherits"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Embedding.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:Embedding.__init__",
+   "target": "method:Embedding.reset_parameters",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Embedding.reset_parameters",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Embedding.train",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Embedding.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:Linear",
+   "relation": "defines"
+  },
+  {
+   "source": "class:Linear",
+   "target": "class:LoRALayer",
+   "relation": "inherits"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Linear.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:Linear.__init__",
+   "target": "method:Embedding.reset_parameters",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Linear.reset_parameters",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Linear.train",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Linear.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:MergedLinear",
+   "relation": "defines"
+  },
+  {
+   "source": "class:MergedLinear",
+   "target": "class:LoRALayer",
+   "relation": "inherits"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:MergedLinear.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:MergedLinear.__init__",
+   "target": "method:Embedding.reset_parameters",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:MergedLinear.reset_parameters",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:MergedLinear.zero_pad",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:MergedLinear.merge_AB",
+   "relation": "defines"
+  },
+  {
+   "source": "method:MergedLinear.merge_AB",
+   "target": "method:MergedLinear.zero_pad",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:MergedLinear.train",
+   "relation": "defines"
+  },
+  {
+   "source": "method:MergedLinear.train",
+   "target": "method:MergedLinear.merge_AB",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:MergedLinear.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "method:MergedLinear.forward",
+   "target": "method:MergedLinear.merge_AB",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:ConvLoRA",
+   "relation": "defines"
+  },
+  {
+   "source": "class:ConvLoRA",
+   "target": "class:LoRALayer",
+   "relation": "inherits"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:ConvLoRA.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:ConvLoRA.__init__",
+   "target": "method:Embedding.reset_parameters",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:ConvLoRA.reset_parameters",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:ConvLoRA.train",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:ConvLoRA.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:Conv2d",
+   "relation": "defines"
+  },
+  {
+   "source": "class:Conv2d",
+   "target": "class:ConvLoRA",
+   "relation": "inherits"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Conv2d.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:Conv1d",
+   "relation": "defines"
+  },
+  {
+   "source": "class:Conv1d",
+   "target": "class:ConvLoRA",
+   "relation": "inherits"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Conv1d.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "class:Conv3d",
+   "relation": "defines"
+  },
+  {
+   "source": "class:Conv3d",
+   "target": "class:ConvLoRA",
+   "relation": "inherits"
+  },
+  {
+   "source": "file:loralib/layers.py",
+   "target": "method:Conv3d.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/utils.py",
+   "target": "func:mark_only_lora_as_trainable",
+   "relation": "defines"
+  },
+  {
+   "source": "file:loralib/utils.py",
+   "target": "func:lora_state_dict",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "class:LMOrderedIterator",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:LMOrderedIterator.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:LMOrderedIterator.__iter__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:LMOrderedIterator.__iter__",
+   "target": "method:LMOrderedIterator.get_fixlen_iter",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:LMOrderedIterator.get_batch",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:LMOrderedIterator.get_fixlen_iter",
+   "relation": "defines"
+  },
+  {
+   "source": "method:LMOrderedIterator.get_fixlen_iter",
+   "target": "method:LMOrderedIterator.get_batch",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "class:Corpus",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:Corpus.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "class:BinLMOrderedIterator",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:BinLMOrderedIterator.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:BinLMOrderedIterator.__iter__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:BinLMOrderedIterator.__iter__",
+   "target": "method:LMOrderedIterator.get_fixlen_iter",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:BinLMOrderedIterator.get_batch",
+   "relation": "defines"
+  },
+  {
+   "source": "method:BinLMOrderedIterator.get_batch",
+   "target": "method:BinCorpus.get_tokens",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:BinLMOrderedIterator.get_fixlen_iter",
+   "relation": "defines"
+  },
+  {
+   "source": "method:BinLMOrderedIterator.get_fixlen_iter",
+   "target": "method:LMOrderedIterator.get_batch",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "class:BinCorpus",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:BinCorpus.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:BinCorpus.get_tokens",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "func:get_lm_corpus",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "func:padding_tokens",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "class:FT_Dataset",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:FT_Dataset.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:FT_Dataset.__init__",
+   "target": "method:FT_Dataset.read_ft_file",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:FT_Dataset.__len__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:FT_Dataset.__getitem__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:FT_Dataset.__getitem__",
+   "target": "func:padding_tokens",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/data_utils.py",
+   "target": "method:FT_Dataset.read_ft_file",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "func:bytes_to_unicode",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "func:get_pairs",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "class:Encoder",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "method:Encoder.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:Encoder.__init__",
+   "target": "func:bytes_to_unicode",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "method:Encoder.bpe",
+   "relation": "defines"
+  },
+  {
+   "source": "method:Encoder.bpe",
+   "target": "func:get_pairs",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "method:Encoder.encode",
+   "relation": "defines"
+  },
+  {
+   "source": "method:Encoder.encode",
+   "target": "method:Encoder.bpe",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "method:Encoder.decode",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/encoder.py",
+   "target": "func:get_encoder",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/exp_utils.py",
+   "target": "func:logging",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/exp_utils.py",
+   "target": "func:get_logger",
+   "relation": "defines"
+  },
+  {
+   "source": "func:get_logger",
+   "target": "func:logging",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/exp_utils.py",
+   "target": "func:create_exp_dir",
+   "relation": "defines"
+  },
+  {
+   "source": "func:create_exp_dir",
+   "target": "func:logging",
+   "relation": "calls"
+  },
+  {
+   "source": "func:create_exp_dir",
+   "target": "func:get_logger",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/exp_utils.py",
+   "target": "func:save_checkpoint",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_beam.py",
+   "target": "func:print_args",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_beam.py",
+   "target": "func:_reorder_cache",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_beam.py",
+   "target": "func:_calc_banned_ngram_tokens",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_beam.py",
+   "target": "func:_enforce_repetition_penalty_",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_beam.py",
+   "target": "func:_postprocess_next_token_scores",
+   "relation": "defines"
+  },
+  {
+   "source": "func:_postprocess_next_token_scores",
+   "target": "func:_enforce_repetition_penalty_",
+   "relation": "calls"
+  },
+  {
+   "source": "func:_postprocess_next_token_scores",
+   "target": "func:_calc_banned_ngram_tokens",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_beam.py",
+   "target": "func:_add_beam_candidate",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_beam.py",
+   "target": "func:beam",
+   "relation": "defines"
+  },
+  {
+   "source": "func:beam",
+   "target": "func:distributed_sync",
+   "relation": "calls"
+  },
+  {
+   "source": "func:beam",
+   "target": "func:_reorder_cache",
+   "relation": "calls"
+  },
+  {
+   "source": "func:beam",
+   "target": "func:distributed_gather",
+   "relation": "calls"
+  },
+  {
+   "source": "func:beam",
+   "target": "func:_postprocess_next_token_scores",
+   "relation": "calls"
+  },
+  {
+   "source": "func:beam",
+   "target": "func:_add_beam_candidate",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_decode.py",
+   "target": "func:stardard_tokenize",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_decode.py",
+   "target": "func:post_process",
+   "relation": "defines"
+  },
+  {
+   "source": "func:post_process",
+   "target": "func:stardard_tokenize",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "func:print_args",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "class:AverageMeter",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "method:AverageMeter.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:AverageMeter.__init__",
+   "target": "method:AverageMeter.reset",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "method:AverageMeter.reset",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "method:AverageMeter.update",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "func:optimizer_step",
+   "relation": "defines"
+  },
+  {
+   "source": "func:optimizer_step",
+   "target": "method:AdamW.step",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "func:evaluate",
+   "relation": "defines"
+  },
+  {
+   "source": "func:evaluate",
+   "target": "method:AverageMeter.update",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "func:train_validate",
+   "relation": "defines"
+  },
+  {
+   "source": "func:train_validate",
+   "target": "func:evaluate",
+   "relation": "calls"
+  },
+  {
+   "source": "func:train_validate",
+   "target": "method:AverageMeter.update",
+   "relation": "calls"
+  },
+  {
+   "source": "func:train_validate",
+   "target": "method:Embedding.train",
+   "relation": "calls"
+  },
+  {
+   "source": "func:train_validate",
+   "target": "func:distributed_sync",
+   "relation": "calls"
+  },
+  {
+   "source": "func:train_validate",
+   "target": "method:AverageMeter.reset",
+   "relation": "calls"
+  },
+  {
+   "source": "func:train_validate",
+   "target": "func:lora_state_dict",
+   "relation": "calls"
+  },
+  {
+   "source": "func:train_validate",
+   "target": "func:optimizer_step",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/gpu.py",
+   "target": "func:add_gpu_params",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpu.py",
+   "target": "func:distributed_opt",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpu.py",
+   "target": "func:distributed_gather",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpu.py",
+   "target": "func:distributed_sync",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpu.py",
+   "target": "func:parse_gpu",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/gpu.py",
+   "target": "func:cleanup",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "func:gelu",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "func:gelu_fast",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "func:gelu_new",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "func:swish",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "func:_gelu_python",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:LayerNorm",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:LayerNorm.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:LayerNorm.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:Conv1D",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Conv1D.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Conv1D.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:Attention",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Attention.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Attention._attn",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Attention.merge_heads",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Attention.split_heads",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Attention.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "method:Attention.forward",
+   "target": "method:Attention.merge_heads",
+   "relation": "calls"
+  },
+  {
+   "source": "method:Attention.forward",
+   "target": "method:Attention.split_heads",
+   "relation": "calls"
+  },
+  {
+   "source": "method:Attention.forward",
+   "target": "method:Attention._attn",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:MLP",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:MLP.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:MLP.__init__",
+   "target": "func:gelu",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:MLP.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:Block",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Block.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:Block.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:GPT2Model",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2Model.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2Model.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:GPT2LMHead",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMHead.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:GPT2LMHead.__init__",
+   "target": "method:GPT2LMHead.set_embeddings_weights",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMHead.set_embeddings_weights",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMHead.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:GPT2Config",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2Config.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "class:GPT2LMModel",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMModel.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:GPT2LMModel.__init__",
+   "target": "method:GPT2LMModel._init_weights",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMModel.set_tied",
+   "relation": "defines"
+  },
+  {
+   "source": "method:GPT2LMModel.set_tied",
+   "target": "method:GPT2LMHead.set_embeddings_weights",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMModel.forward",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMModel._init_weights",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "method:GPT2LMModel.load_weight",
+   "relation": "defines"
+  },
+  {
+   "source": "method:GPT2LMModel.load_weight",
+   "target": "method:GPT2LMModel.set_tied",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:add_optimizer_params",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "class:AdamW",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:AdamW.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:AdamW.reset_state",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:AdamW.step",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "class:CosineAnnealingWarmupRestarts",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CosineAnnealingWarmupRestarts.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:CosineAnnealingWarmupRestarts.__init__",
+   "target": "method:CosineAnnealingWarmupRestarts.init_lr",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CosineAnnealingWarmupRestarts.init_lr",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CosineAnnealingWarmupRestarts.get_lr",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CosineAnnealingWarmupRestarts.step",
+   "relation": "defines"
+  },
+  {
+   "source": "method:CosineAnnealingWarmupRestarts.step",
+   "target": "method:CosineAnnealingWarmupRestarts.get_lr",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "class:CyclicScheduler",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CyclicScheduler.__init__",
+   "relation": "defines"
+  },
+  {
+   "source": "method:CyclicScheduler.__init__",
+   "target": "method:CosineAnnealingWarmupRestarts.init_lr",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CyclicScheduler.init_lr",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CyclicScheduler.get_lr",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "method:CyclicScheduler.step",
+   "relation": "defines"
+  },
+  {
+   "source": "method:CyclicScheduler.step",
+   "target": "method:CosineAnnealingWarmupRestarts.get_lr",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:get_linear_schedule_with_warmup",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:get_constant_schedule_with_warmup",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:create_grouped_parameters",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:create_adam_optimizer",
+   "relation": "defines"
+  },
+  {
+   "source": "func:create_adam_optimizer",
+   "target": "func:create_grouped_parameters",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:create_sgd_optimizer",
+   "relation": "defines"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:create_adam_optimizer_from_args",
+   "relation": "defines"
+  },
+  {
+   "source": "func:create_adam_optimizer_from_args",
+   "target": "func:create_grouped_parameters",
+   "relation": "calls"
+  },
+  {
+   "source": "file:examples/NLG/src/optimizer.py",
+   "target": "func:create_optimizer_scheduler",
+   "relation": "defines"
+  },
+  {
+   "source": "func:create_optimizer_scheduler",
+   "target": "func:get_constant_schedule_with_warmup",
+   "relation": "calls"
+  },
+  {
+   "source": "func:create_optimizer_scheduler",
+   "target": "func:get_linear_schedule_with_warmup",
+   "relation": "calls"
+  },
+  {
+   "source": "file:loralib/__init__.py",
+   "target": "file:loralib/layers.py",
+   "relation": "imports"
+  },
+  {
+   "source": "file:loralib/__init__.py",
+   "target": "file:loralib/utils.py",
+   "relation": "imports"
+  },
+  {
+   "source": "file:loralib/utils.py",
+   "target": "file:loralib/layers.py",
+   "relation": "imports"
+  },
+  {
+   "source": "file:examples/NLG/src/gpt2_ft.py",
+   "target": "file:loralib/utils.py",
+   "relation": "imports"
+  },
+  {
+   "source": "file:examples/NLG/src/model.py",
+   "target": "file:loralib/utils.py",
+   "relation": "imports"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "class:Linear",
+   "relation": "implemented_by"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "class:Embedding",
+   "relation": "implemented_by"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "class:MergedLinear",
+   "relation": "implemented_by"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "class:ConvLoRA",
+   "relation": "implemented_by"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "class:LoRALayer",
+   "relation": "implemented_by"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "func:mark_only_lora_as_trainable",
+   "relation": "implemented_by"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "func:lora_state_dict",
+   "relation": "implemented_by"
+  },
+  {
+   "source": "concept:QLoRA",
+   "target": "concept:LoRA",
+   "relation": "extends"
+  },
+  {
+   "source": "concept:AdaLoRA",
+   "target": "concept:LoRA",
+   "relation": "extends"
+  },
+  {
+   "source": "concept:BayesianLoRA",
+   "target": "concept:LoRA",
+   "relation": "extends"
+  },
+  {
+   "source": "concept:HiLoRA",
+   "target": "concept:LoRA",
+   "relation": "extends"
+  },
+  {
+   "source": "concept:IntrinsicDim",
+   "target": "concept:LoRA",
+   "relation": "motivates"
+  },
+  {
+   "source": "concept:QLoRA",
+   "target": "method:Linear.forward",
+   "relation": "modifies"
+  },
+  {
+   "source": "concept:AdaLoRA",
+   "target": "method:Linear.reset_parameters",
+   "relation": "modifies"
+  },
+  {
+   "source": "concept:AdaLoRA",
+   "target": "method:Linear.__init__",
+   "relation": "modifies"
+  },
+  {
+   "source": "concept:BayesianLoRA",
+   "target": "class:LoRALayer",
+   "relation": "modifies"
+  },
+  {
+   "source": "concept:HiLoRA",
+   "target": "func:lora_state_dict",
+   "relation": "applies_to"
+  },
+  {
+   "source": "concept:HiLoRA",
+   "target": "func:mark_only_lora_as_trainable",
+   "relation": "applies_to"
+  },
+  {
+   "source": "concept:AdaLoRA",
+   "target": "paper:ADALORA",
+   "relation": "proposed_in"
+  },
+  {
+   "source": "concept:AdaLoRA",
+   "target": "paper:AdaLoRApdf",
+   "relation": "proposed_in"
+  },
+  {
+   "source": "concept:BayesianLoRA",
+   "target": "paper:Bayesian",
+   "relation": "proposed_in"
+  },
+  {
+   "source": "concept:HiLoRA",
+   "target": "paper:HiLoRA",
+   "relation": "proposed_in"
+  },
+  {
+   "source": "concept:IntrinsicDim",
+   "target": "paper:IntrinsicDimensionalityExplainstheEffectivenessofLanguageModelFine",
+   "relation": "proposed_in"
+  },
+  {
+   "source": "concept:LoRA",
+   "target": "paper:LoRA",
+   "relation": "proposed_in"
+  },
+  {
+   "source": "concept:IntrinsicDim",
+   "target": "paper:MeasuringtheIntrinsicDi",
+   "relation": "proposed_in"
+  },
+  {
+   "source": "concept:QLoRA",
+   "target": "paper:QLoRA",
+   "relation": "proposed_in"
+  }
+ ]
+}

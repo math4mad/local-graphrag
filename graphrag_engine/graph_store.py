@@ -19,8 +19,10 @@ class Node:
 
     def as_text(self) -> str:
         desc = self.properties.get("description", "")
+        sig = self.properties.get("signature", "")
         extra = f" ({desc})" if desc else ""
-        return f"{self.type} {self.name}{extra} [community={self.community or '-'}]"
+        sig_text = f" sig={sig}" if sig else ""
+        return f"{self.type} {self.name}{extra}{sig_text} [community={self.community or '-'}]"
 
 
 @dataclass
