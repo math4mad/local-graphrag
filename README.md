@@ -25,6 +25,20 @@ Human ──> Local Small Model ──> Structured Query ──> Local Graph ─
 | 云端大模型 | 基于子图上下文做深度推理：问答合成（`answer`）或接地代码生成（`code`，强制与图中真实 API 签名兼容、缺口显式标注假设） | 任意 OpenAI 兼容端点（已验证 DeepSeek `deepseek-chat`） |
 | 回退机制 | 小模型不可用 / 查询失败 / 结果退化（空或 ≤3 节点 ≤3 边的薄子图）时，自动降级到关键词检索，保证可用性 | 字符 bigram 评分（对中文友好，无需分词器） |
 
+## GraphRAG 谱系定位
+
+本项目是 **query-planning 驱动的 GraphRAG 变体**，属于 GraphRAG 谱系中的"结构化检索"分支（同 Text2Cypher / T-GraphRAG 路线），而非 Microsoft GraphRAG 论文的"向量 + 社区"分支。对照标准流程：
+
+| GraphRAG 标准环节 | 本项目实现 | 差异说明 |
+|---|---|---|
+| 索引期：LLM 抽取实体/关系构图 | AST 确定性解析代码 + pypdf 提取文献 + 种子概念层 | 代码域用确定性解析替代 LLM 抽取，签名/继承/调用零幻觉，是增强而非偏离 |
+| Leiden 社区检测 + LLM 层级摘要 | 规则社区划分 + 索引期云端 LLM 单层摘要 | 无层级化（level 0/1/2 摘要树） |
+| Local search：向量匹配入口实体 → 多跳遍历 | 小模型生成 DSL → `match` 锚点 → `traverse` 多跳 → 子图组装 | **最大变体**：检索入口是结构化查询而非 embedding 相似度 |
+| Global search：map-reduce 遍历社区摘要 | `include_community_summaries` 一次取回 + 按 community 聚合 | 简化版 |
+| LLM 基于上下文合成答案 | 云端 LLM 作答（`answer`）/ 生成代码（`code`） | 一致 |
+
+核心判断依据：GraphRAG 的本质是**以显式图（实体+关系）为检索基底，通过多跳遍历获取关联上下文**。`calls`/`inherits`/`modifies`/`extends` 边提供了向量检索拿不到的跨文档/跨模块关联——例如 HiLoRA 答案能精确关联 `lora_state_dict` 的签名细节，靠的是 `applies_to` 边而非语义巧合。代码+文献的异构图谱（文献给 Concept/Paper 与理论依据，代码给可执行实体，`modifies`/`implemented_by` 边缝合两者）构成"从论文到代码"的检索增强生成闭环。
+
 ## 目录结构
 
 ```
@@ -157,7 +171,9 @@ GRAPH_PATH=data/lora_graph.json python3 -m graphrag_engine code          # REPL 
 9. **成本**：发往云端的是裁剪后的子图文本（问答通常 < 1K token），一次问答成本极低。`code` 模式输出完整实现代码，回答较长，但输入侧成本不变。
 10. **增量索引依赖已有输出文件**：`--incremental` 以 `--out` 文件自身为缓存，首次构建必须先全量跑；解析器逻辑变更后也应先全量重建（缓存的旧节点不会自动重解析）。
 11. **接入其他真实仓库**：运行 `tools/build_graph.py`（AST 解析 + pypdf 摘要，见上节）生成同构 JSON，`GRAPH_PATH` 指向新图谱即可；概念种子层 `SEED_CONCEPTS`/`SEED_EDGES` 与 `paper_concept()` 需按领域替换。
-12. **生产化建议**（本 demo 未实现）：监听 git 事件的自动增量索引（当前为手动 `--incremental`）、向量检索作为二级回退。索引期社区摘要与增量索引已在 `tools/build_graph.py` 落地。
+12. **结构化检索入口的固有局限**（谱系定位的代价）：放弃 embedding 入口意味着实体定位依赖小模型选对锚点名 + 关键词回退，**同义词/别名/模糊描述**（"支付通知回调" vs `handle_callback`）的召回弱于向量检索。缓解手段：节点 `description` 写充分（`$contains` 可命中描述）、为高频实体维护别名表。若图谱规模大到锚点频繁选错，可加向量检索作为一级入口——这是与标准 GraphRAG 的主要差距，也是最有价值的升级方向。
+13. **全局性问题能力有上限**：社区摘要是单层、一次取回，没有 Microsoft GraphRAG 的层级摘要树（level 0/1/2）与 map-reduce 遍历，"整个仓库的架构演进"类问题只能拿到粗粒度回答。需要时可把 `aggregate.group_by=community` 的取回结果交给云端做多轮归纳。
+14. **生产化建议**（本 demo 未实现）：监听 git 事件的自动增量索引（当前为手动 `--incremental`）、向量检索作为二级回退。索引期社区摘要与增量索引已在 `tools/build_graph.py` 落地。
 
 ## License
 
