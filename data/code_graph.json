@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "project": "shop-service",
+    "description": "Sample code knowledge graph for the GraphRAG query engine demo",
+    "built_from": "static analysis (simulated)"
+  },
+  "communities": [
+    {
+      "id": "order",
+      "name": "订单模块",
+      "summary": "订单模块负责订单全生命周期。OrderService.create_order 先调用 InventoryService 扣减库存, 再通过 PaymentGateway 发起支付, 所有写操作都经过 TransactionManager 的事务边界 (begin/commit)。金额计算由 calculate_total 完成并支持 apply_promotion 促销折扣。"
+    },
+    {
+      "id": "payment",
+      "name": "支付模块",
+      "summary": "支付模块中 PaymentGateway 封装第三方支付渠道扣款 (charge), CallbackHandler 接收异步支付回调 (handle_callback): 先 verify_signature 验签, 再 update_order_status 更新订单状态并触发 add_points 发放积分。退款走 refund, 会恢复库存。"
+    },
+    {
+      "id": "user",
+      "name": "用户模块",
+      "summary": "用户模块 UserService 管理积分: add_points 由支付回调链路触发, exchange_points 支持用户用积分兑换商品, 内部复用 InventoryService.deduct_stock 扣库存并经由 TransactionManager 提交事务。"
+    },
+    {
+      "id": "common",
+      "name": "公共基础设施",
+      "summary": "公共模块提供横切能力: BaseService 定义所有业务服务的接口约定 (继承约束), TransactionManager 提供 begin/commit 事务边界, 订单/支付/用户/库存各模块服务均继承 BaseService 且依赖 TransactionManager。"
+    },
+    {
+      "id": "inventory",
+      "name": "库存模块",
+      "summary": "库存模块 InventoryService 提供 deduct_stock 扣减与 restore_stock 回补, 被下单 (create_order) 和积分兑换 (exchange_points) 复用, 退款时由 refund 触发回补。"
+    }
+  ],
+  "nodes": [
+    {"id": "file:app.py", "type": "File", "name": "app.py", "community": "common", "properties": {"path": "app.py", "description": "应用入口, 挂载 orders/payments/users 路由蓝本"}},
+    {"id": "file:orders/api.py", "type": "File", "name": "orders/api.py", "community": "order", "properties": {"path": "orders/api.py", "description": "订单 REST 接口层"}},
+    {"id": "file:orders/service.py", "type": "File", "name": "orders/service.py", "community": "order", "properties": {"path": "orders/service.py", "description": "订单业务实现"}},
+    {"id": "file:payments/gateway.py", "type": "File", "name": "payments/gateway.py", "community": "payment", "properties": {"path": "payments/gateway.py", "description": "支付网关封装"}},
+    {"id": "file:payments/callback.py", "type": "File", "name": "payments/callback.py", "community": "payment", "properties": {"path": "payments/callback.py", "description": "支付异步回调处理"}},
+    {"id": "file:users/service.py", "type": "File", "name": "users/service.py", "community": "user", "properties": {"path": "users/service.py", "description": "用户与积分业务"}},
+    {"id": "file:inventory/service.py", "type": "File", "name": "inventory/service.py", "community": "inventory", "properties": {"path": "inventory/service.py", "description": "库存业务"}},
+    {"id": "file:common/base.py", "type": "File", "name": "common/base.py", "community": "common", "properties": {"path": "common/base.py", "description": "服务基类定义"}},
+    {"id": "file:common/transaction.py", "type": "File", "name": "common/transaction.py", "community": "common", "properties": {"path": "common/transaction.py", "description": "事务管理器定义"}},
+
+    {"id": "class:OrderService", "type": "Class", "name": "OrderService", "community": "order", "properties": {"description": "订单服务, 编排下单/金额计算/支付发起"}},
+    {"id": "class:PaymentGateway", "type": "Class", "name": "PaymentGateway", "community": "payment", "properties": {"description": "第三方支付网关封装"}},
+    {"id": "class:CallbackHandler", "type": "Class", "name": "CallbackHandler", "community": "payment", "properties": {"description": "支付回调处理器"}},
+    {"id": "class:UserService", "type": "Class", "name": "UserService", "community": "user", "properties": {"description": "用户服务, 管理积分"}},
+    {"id": "class:InventoryService", "type": "Class", "name": "InventoryService", "community": "inventory", "properties": {"description": "库存服务"}},
+    {"id": "class:BaseService", "type": "Class", "name": "BaseService", "community": "common", "properties": {"description": "所有业务服务的基类约定"}},
+    {"id": "class:TransactionManager", "type": "Class", "name": "TransactionManager", "community": "common", "properties": {"description": "事务管理器, 提供 begin/commit"}},
+
+    {"id": "func:create_order", "type": "Function", "name": "create_order", "community": "order", "properties": {"owner": "OrderService", "description": "创建订单: 校验库存并发起支付"}},
+    {"id": "func:calculate_total", "type": "Function", "name": "calculate_total", "community": "order", "properties": {"owner": "OrderService", "description": "计算订单总金额"}},
+    {"id": "func:apply_promotion", "type": "Function", "name": "apply_promotion", "community": "order", "properties": {"owner": "OrderService", "description": "应用促销折扣"}},
+    {"id": "func:update_order_status", "type": "Function", "name": "update_order_status", "community": "order", "properties": {"owner": "OrderService", "description": "更新订单状态并提交事务"}},
+    {"id": "func:charge", "type": "Function", "name": "charge", "community": "payment", "properties": {"owner": "PaymentGateway", "description": "调用第三方支付渠道扣款"}},
+    {"id": "func:handle_callback", "type": "Function", "name": "handle_callback", "community": "payment", "properties": {"owner": "CallbackHandler", "description": "处理支付异步回调"}},
+    {"id": "func:verify_signature", "type": "Function", "name": "verify_signature", "community": "payment", "properties": {"owner": "CallbackHandler", "description": "校验回调签名"}},
+    {"id": "func:refund", "type": "Function", "name": "refund", "community": "payment", "properties": {"owner": "PaymentGateway", "description": "发起退款并回补库存"}},
+    {"id": "func:deduct_stock", "type": "Function", "name": "deduct_stock", "community": "inventory", "properties": {"owner": "InventoryService", "description": "扣减库存"}},
+    {"id": "func:restore_stock", "type": "Function", "name": "restore_stock", "community": "inventory", "properties": {"owner": "InventoryService", "description": "回补库存"}},
+    {"id": "func:add_points", "type": "Function", "name": "add_points", "community": "user", "properties": {"owner": "UserService", "description": "支付成功后发放积分"}},
+    {"id": "func:exchange_points", "type": "Function", "name": "exchange_points", "community": "user", "properties": {"owner": "UserService", "description": "用户积分兑换商品"}},
+    {"id": "func:begin", "type": "Function", "name": "begin", "community": "common", "properties": {"owner": "TransactionManager", "description": "开启事务"}},
+    {"id": "func:commit", "type": "Function", "name": "commit", "community": "common", "properties": {"owner": "TransactionManager", "description": "提交事务"}}
+  ],
+  "edges": [
+    {"source": "file:orders/api.py", "target": "class:OrderService", "relation": "defines"},
+    {"source": "file:orders/service.py", "target": "class:OrderService", "relation": "defines"},
+    {"source": "file:orders/service.py", "target": "func:create_order", "relation": "defines"},
+    {"source": "file:orders/service.py", "target": "func:calculate_total", "relation": "defines"},
+    {"source": "file:orders/service.py", "target": "func:apply_promotion", "relation": "defines"},
+    {"source": "file:orders/service.py", "target": "func:update_order_status", "relation": "defines"},
+    {"source": "file:payments/gateway.py", "target": "class:PaymentGateway", "relation": "defines"},
+    {"source": "file:payments/gateway.py", "target": "func:charge", "relation": "defines"},
+    {"source": "file:payments/gateway.py", "target": "func:refund", "relation": "defines"},
+    {"source": "file:payments/callback.py", "target": "class:CallbackHandler", "relation": "defines"},
+    {"source": "file:payments/callback.py", "target": "func:handle_callback", "relation": "defines"},
+    {"source": "file:payments/callback.py", "target": "func:verify_signature", "relation": "defines"},
+    {"source": "file:users/service.py", "target": "class:UserService", "relation": "defines"},
+    {"source": "file:users/service.py", "target": "func:add_points", "relation": "defines"},
+    {"source": "file:users/service.py", "target": "func:exchange_points", "relation": "defines"},
+    {"source": "file:inventory/service.py", "target": "class:InventoryService", "relation": "defines"},
+    {"source": "file:inventory/service.py", "target": "func:deduct_stock", "relation": "defines"},
+    {"source": "file:inventory/service.py", "target": "func:restore_stock", "relation": "defines"},
+    {"source": "file:common/base.py", "target": "class:BaseService", "relation": "defines"},
+    {"source": "file:common/transaction.py", "target": "class:TransactionManager", "relation": "defines"},
+    {"source": "file:common/transaction.py", "target": "func:begin", "relation": "defines"},
+    {"source": "file:common/transaction.py", "target": "func:commit", "relation": "defines"},
+
+    {"source": "class:OrderService", "target": "class:BaseService", "relation": "inherits"},
+    {"source": "class:PaymentGateway", "target": "class:BaseService", "relation": "inherits"},
+    {"source": "class:CallbackHandler", "target": "class:BaseService", "relation": "inherits"},
+    {"source": "class:UserService", "target": "class:BaseService", "relation": "inherits"},
+    {"source": "class:InventoryService", "target": "class:BaseService", "relation": "inherits"},
+
+    {"source": "class:OrderService", "target": "class:TransactionManager", "relation": "depends"},
+    {"source": "class:PaymentGateway", "target": "class:TransactionManager", "relation": "depends"},
+    {"source": "class:CallbackHandler", "target": "class:TransactionManager", "relation": "depends"},
+    {"source": "class:UserService", "target": "class:TransactionManager", "relation": "depends"},
+    {"source": "class:InventoryService", "target": "class:TransactionManager", "relation": "depends"},
+
+    {"source": "file:orders/api.py", "target": "file:orders/service.py", "relation": "imports"},
+    {"source": "file:orders/service.py", "target": "file:payments/gateway.py", "relation": "imports"},
+    {"source": "file:orders/service.py", "target": "file:inventory/service.py", "relation": "imports"},
+    {"source": "file:orders/service.py", "target": "file:common/transaction.py", "relation": "imports"},
+    {"source": "file:payments/callback.py", "target": "file:payments/gateway.py", "relation": "imports"},
+    {"source": "file:payments/callback.py", "target": "file:orders/service.py", "relation": "imports"},
+    {"source": "file:users/service.py", "target": "file:common/transaction.py", "relation": "imports"},
+    {"source": "file:users/service.py", "target": "file:inventory/service.py", "relation": "imports"},
+    {"source": "file:app.py", "target": "file:orders/api.py", "relation": "imports"},
+    {"source": "file:app.py", "target": "file:payments/callback.py", "relation": "imports"},
+    {"source": "file:app.py", "target": "file:users/service.py", "relation": "imports"},
+
+    {"source": "func:create_order", "target": "func:calculate_total", "relation": "calls"},
+    {"source": "func:create_order", "target": "func:apply_promotion", "relation": "calls"},
+    {"source": "func:create_order", "target": "func:deduct_stock", "relation": "calls"},
+    {"source": "func:create_order", "target": "func:charge", "relation": "calls"},
+    {"source": "func:create_order", "target": "func:begin", "relation": "calls"},
+    {"source": "func:charge", "target": "func:begin", "relation": "calls"},
+    {"source": "func:handle_callback", "target": "func:verify_signature", "relation": "calls"},
+    {"source": "func:handle_callback", "target": "func:update_order_status", "relation": "calls"},
+    {"source": "func:handle_callback", "target": "func:add_points", "relation": "calls"},
+    {"source": "func:update_order_status", "target": "func:commit", "relation": "calls"},
+    {"source": "func:add_points", "target": "func:commit", "relation": "calls"},
+    {"source": "func:refund", "target": "func:restore_stock", "relation": "calls"},
+    {"source": "func:exchange_points", "target": "func:deduct_stock", "relation": "calls"},
+    {"source": "func:exchange_points", "target": "func:commit", "relation": "calls"}
+  ]
+}

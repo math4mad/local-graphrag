@@ -1,0 +1,17 @@
+# 私人对话记录（AGENTS.MD 的设计依据，不随仓库发布）
+external/
+
+# 渲染产物
+AGENTS.html
+AGENTS_files/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# 环境与系统
+.env
+.DS_Store
+.vscode/

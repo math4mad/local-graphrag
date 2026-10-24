@@ -1,0 +1,19 @@
+[project]
+name = "local-graphrag-engine"
+version = "0.1.0"
+description = "GraphRAG query engine: Human -> Local Small Model -> Structured Query -> Cloud LLM -> Results"
+requires-python = ">=3.10"
+dependencies = [
+    "networkx>=3.0",
+    "requests>=2.30",
+]
+
+[project.scripts]
+graphrag = "graphrag_engine.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["graphrag_engine*"]
