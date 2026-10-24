@@ -11,7 +11,7 @@ Human ──> Local Small Model ──> Structured Query ──> Local Graph ─
    本地                本地                 本地             本地             云端
 ```
 
-云端 LLM 支持两种任务模式：`answer`（问答，默认）与 `code`（代码生成——基于检索到的真实类/函数签名 + 文献要点，产出可运行实现，见下文 LoRA 变体案例）。
+云端 LLM 支持两种任务模式：`answer`（问答，默认）与 `code`（代码生成——基于检索到的真实类/函数签名 + 文献要点，产出可运行实现，见下文 LoRA / 贝叶斯变体案例）。
 
 隐私模型：**图谱数据与查询计划全程留在本地**，只有「精简后的子图上下文 + 原始问题」发送到云端 LLM，Token 消耗远低于传统 RAG 全量塞上下文的做法。
 
@@ -19,7 +19,7 @@ Human ──> Local Small Model ──> Structured Query ──> Local Graph ─
 
 | 环节 | 职责 | 选型 |
 |---|---|---|
-| 本地图数据 | 代码知识图谱（File/Class/Method/Function + Paper/Concept 节点，defines/inherits/calls/imports/extends/modifies/implemented_by 边，社区摘要） | JSON + NetworkX，零运维；`tools/build_graph.py` 从真实仓库 AST + PDF 自动构建 |
+| 本地图数据 | 代码知识图谱（File/Class/Method/Function + Paper/Concept 节点，defines/inherits/calls/imports/extends/modifies/implemented_by/corresponds_to 边，社区摘要）；支持多语言源（Python AST + R regex） | JSON + NetworkX，零运维；`tools/build_graph.py --domain lora\|bayes` 从真实仓库/文献自动构建 |
 | 本地小模型 | 自然语言 → 结构化图查询（意图理解 + Schema 对齐），**不需要强生成能力，只需精准的结构化输出** | Ollama `qwen2.5-coder:7b`（1.5b 可用） |
 | 结构化查询 | 确定性执行，不经过任何 LLM，可审计、可复现 | 自研 JSON DSL（见下） |
 | 云端大模型 | 基于子图上下文做深度推理：问答合成（`answer`）或接地代码生成（`code`，强制与图中真实 API 签名兼容、缺口显式标注假设） | 任意 OpenAI 兼容端点（已验证 DeepSeek `deepseek-chat`） |
@@ -51,9 +51,11 @@ graphrag_engine/
 └── cli.py            # 交互式 REPL（逐阶段透明展示）
 data/code_graph.json  # 示例：shop-service 代码知识图谱（30 节点 / 57 边 / 5 社区）
 data/lora_graph.json  # 真实图谱：Microsoft LoRA 仓库 + 8 篇 LoRA 文献（179 节点 / 241 边）
-tools/build_graph.py  # 索引器：AST 解析代码 + pypdf 提取文献摘要 + 增量索引 + 索引期社区摘要
+data/bayes_graph.json # 真实图谱：NumPyro + rethinking(R) + 6 本贝叶斯书/论文（2361 节点 / 5693 边）
+tools/build_graph.py  # 索引器：--domain lora|bayes，AST/R-regex 解析代码 + pypdf 文献摘要 + 增量 + 索引期社区摘要
 examples/demo.py      # 端到端演示脚本（demo 图谱）
 examples/lora_variants.py  # 真实场景演示：基于文献生成 LoRA 变体的可执行代码
+examples/bayes_variants.py # 真实场景演示：基于文献生成贝叶斯模型的可执行 NumPyro 代码
 ```
 
 ## 结构化查询 DSL
@@ -145,7 +147,7 @@ python3 tools/build_graph.py \
 
 - **全自动部分**：代码图谱（File/Class/Method/Function + defines/inherits/calls/imports 边）、论文摘要抽取、社区划分与摘要（`--summarize` 在**索引阶段**调用云端 LLM 预计算，查询期零开销）
 - **增量索引**（`--incremental`）：按文件 sha256 判断变更，未变文件复用缓存节点/边；已验证增量输出与全量完全一致
-- **策展层**：变体概念节点（LoRA/QLoRA/AdaLoRA/Bayesian-LoRA/HiLoRA/Intrinsic-Dimension）与 `extends`/`modifies`/`implemented_by` 边是脚本内显式种子（`SEED_CONCEPTS`/`SEED_EDGES`），换领域时替换即可
+- **策展层**：概念节点与 `extends`/`modifies`/`implemented_by` 边是脚本内显式种子，按 `--domain` 注册表切换（`DOMAINS[domain]["seeds"]`），换领域时新增一个域配置即可
 
 ### 基于文献生成 LoRA 变体的可执行代码
 
@@ -157,6 +159,22 @@ GRAPH_PATH=data/lora_graph.json python3 -m graphrag_engine code          # REPL 
 ```
 
 已验证（qwen2.5-coder:7b + deepseek-chat）：QLoRA（NF4 双重量化 + bf16 LoRA 旁路）、AdaLoRA（SVD 重参数化 + spectral-movement 预算分配）、Bayesian-LoRA（低秩因子变分后验）、HiLoRA（分层联邦聚合，正确按 `ΔW=B@A` 增量加权合并再 SVD 截断回低秩）——四份输出均为继承 loralib 真实签名、含假设标注的完整可运行代码。
+
+## 贝叶斯统计域 MVP（feat/bayes-mvp 分支）
+
+同一引擎接入第二个领域，验证跨领域泛化：**NumPyro（Python 库，AST 解析 `distributions/` + `infer/`）+ rethinking（McElreath R 包，regex 解析 45 个源文件）+ 6 本贝叶斯书/论文**，产出 `data/bayes_graph.json`（2361 节点 / 5693 边 / 4 社区：numpyro-distributions、numpyro-infer、rethinking-r、bayes-theory）。
+
+概念层按 dialogue 建议的贝叶斯 schema 策展：Conjugate-Prior / Reparameterization / HMC / NUTS / MCMC / Variational-Inference / Hierarchical-Model / Posterior-Predictive / Model-Comparison，用 `implemented_by`/`corresponds_to`/`modifies`/`extends`/`covers` 边把理论缝合到真实 API（如 `NUTS -corresponds_to-> rfunc:ulam` 跨语言锚定 Stan/R 与 NumPyro 的等价实现）。
+
+```bash
+/opt/miniconda3/envs/default/bin/python tools/build_graph.py --domain bayes \
+    --repo <site-packages>/numpyro --rrepo <rethinking pkg root> \
+    --papers <Bayes_Reading_List> --papers data/bayes_papers \
+    --out data/bayes_graph.json --summarize --incremental
+GRAPH_PATH=data/bayes_graph.json python3 examples/bayes_variants.py
+```
+
+**代码可执行性实测**：对「Beta-Binomial 共轭模型：闭式后验 vs NUTS 对比」一题，把云端生成的代码直接跑在 numpyro 0.22 上——修正两处**上游库环境差异**（非生成缺陷）后完整运行，闭式与 NUTS 后验均值差 0.0002、95% 区间重合。这暴露了 `code` 模式的关键闭环缺口：**生成 ≠ 可执行，验证回路（真跑一遍）必须存在**，也发现了云端先验覆盖上下文签名的问题（见注意事项 15）。
 
 ## 注意事项
 
@@ -170,10 +188,13 @@ GRAPH_PATH=data/lora_graph.json python3 -m graphrag_engine code          # REPL 
 8. **换模型只改环境变量**：`LOCAL_MODEL=qwen2.5-coder:1.5b python3 -m graphrag_engine`，无需改代码。7b 查询准确率显著高于 1.5b。
 9. **成本**：发往云端的是裁剪后的子图文本（问答通常 < 1K token），一次问答成本极低。`code` 模式输出完整实现代码，回答较长，但输入侧成本不变。
 10. **增量索引依赖已有输出文件**：`--incremental` 以 `--out` 文件自身为缓存，首次构建必须先全量跑；解析器逻辑变更后也应先全量重建（缓存的旧节点不会自动重解析）。
-11. **接入其他真实仓库**：运行 `tools/build_graph.py`（AST 解析 + pypdf 摘要，见上节）生成同构 JSON，`GRAPH_PATH` 指向新图谱即可；概念种子层 `SEED_CONCEPTS`/`SEED_EDGES` 与 `paper_concept()` 需按领域替换。
+11. **接入其他真实仓库**：运行 `tools/build_graph.py --domain <name>` 生成同构 JSON，`GRAPH_PATH` 指向新图谱即可；新领域在 `DOMAINS` 注册表加一个配置（索引范围、社区规则、概念种子层 `seeds`、`paper_concept()` 映射），贝叶斯域即现成范例。
 12. **结构化检索入口的固有局限**（谱系定位的代价）：放弃 embedding 入口意味着实体定位依赖小模型选对锚点名 + 关键词回退，**同义词/别名/模糊描述**（"支付通知回调" vs `handle_callback`）的召回弱于向量检索。缓解手段：节点 `description` 写充分（`$contains` 可命中描述）、为高频实体维护别名表。若图谱规模大到锚点频繁选错，可加向量检索作为一级入口——这是与标准 GraphRAG 的主要差距，也是最有价值的升级方向。
 13. **全局性问题能力有上限**：社区摘要是单层、一次取回，没有 Microsoft GraphRAG 的层级摘要树（level 0/1/2）与 map-reduce 遍历，"整个仓库的架构演进"类问题只能拿到粗粒度回答。需要时可把 `aggregate.group_by=community` 的取回结果交给云端做多轮归纳。
-14. **生产化建议**（本 demo 未实现）：监听 git 事件的自动增量索引（当前为手动 `--incremental`）、向量检索作为二级回退。索引期社区摘要与增量索引已在 `tools/build_graph.py` 落地。
+14. **iCloud 占位符 PDF 不可用**：`Bayes_Reading_List` 里的书多为 ~1.2KB 的 dataless 占位文件，`brctl download` 对 Preview 容器不生效、`cp` 只会复制占位符（pypdf 报 `invalid pdf header: b'book'`）。对策：把实体 PDF 放进本地 `data/bayes_papers/`（`--papers` 可重复传多个目录），缺失文件 warn-and-skip；受版权文献不入仓（已 .gitignore）。
+15. **云端先验会覆盖上下文签名**（贝叶斯域实测）：子图上下文里明明有 `Beta(concentration1, concentration0)` 的真实签名，DeepSeek 仍按 torch/tfp 记忆写成 `concentration2=`——同名分布在不同库参数命名不一致。对策：`SYSTEM_CODE` 显式要求「参数名必须逐字采用子图签名，以子图为唯一事实来源」+「勿遗漏 jax.random 等模块导入」，重生成后同类错误归零。
+16. **生成 ≠ 可执行，验证回路必须存在**：把生成代码真跑一遍才发现的上游坑——`BetaBinomial(total_count=浮点)` 触发 numpyro 二项采样器的 jax 索引 bug（需 `int32`）、`Beta.icdf` 依赖未安装的 `tensorflow_probability`。这些既不是检索问题也不是提示词问题，而是版本环境事实；`code` 模式应配 pytest/子进程执行验证，失败信息回灌云端重试。
+17. **生产化建议**（本 demo 未实现）：监听 git 事件的自动增量索引（当前为手动 `--incremental`）、向量检索作为二级回退、代码生成后的自动执行验证回路。索引期社区摘要与增量索引已在 `tools/build_graph.py` 落地。
 
 ## License
 
